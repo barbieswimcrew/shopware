@@ -355,6 +355,19 @@ class Shopware_Controllers_Frontend_Mollie extends AbstractPaymentController
         return $this->redirectBack();
     }
 
+    public function requestApplePayPaymentSessionAction()
+    {
+        Shopware()->Plugins()->Controller()->ViewRenderer()->setNoRender();
+
+        /** @var \Mollie\Api\MollieApiClient $mollieApi */
+        $mollieApi = $this->getMollieApi();
+
+        return $mollieApi->wallets->requestApplePayPaymentSession(
+            $this->Request()->getParam('domain'),
+            $this->Request()->getParam('validationUrl')
+        );
+    }
+
     private function prepareTransaction(\MollieShopware\Models\Transaction $transaction, $basketSignature)
     {
         try {

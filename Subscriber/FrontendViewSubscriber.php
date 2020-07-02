@@ -127,6 +127,7 @@ class FrontendViewSubscriber implements SubscriberInterface
 
         // Add the javascript files to the collection
         $collection->add(__DIR__ . '/../Resources/views/frontend/_public/src/js/applepay.js');
+        $collection->add(__DIR__ . '/../Resources/views/frontend/_public/src/js/applepay-integration.js');
 
         return $collection;
     }
@@ -140,6 +141,7 @@ class FrontendViewSubscriber implements SubscriberInterface
     public function onCollectLess(Enlight_Event_EventArgs $args)
     {
         $lessFiles = [];
+        $lessFiles[] = __DIR__ . '/../Resources/views/frontend/_public/src/less/apple-pay-buttons.less';
         $lessFiles[] = __DIR__ . '/../Resources/views/frontend/_public/src/less/checkout.less';
         $lessFiles[] = __DIR__ . '/../Resources/views/frontend/_public/src/less/components.less';
 
