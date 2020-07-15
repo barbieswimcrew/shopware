@@ -7,6 +7,7 @@ use Enlight\Event\SubscriberInterface;
 use Enlight_Controller_Action;
 use Enlight_Event_EventArgs;
 use Enlight_View;
+use Mollie\Api\Types\PaymentMethod;
 use MollieShopware\Components\Config;
 use Shopware\Components\Theme\LessDefinition;
 
@@ -17,7 +18,8 @@ class FrontendViewSubscriber implements SubscriberInterface
         return [
             'Enlight_Controller_Action_PreDispatch' => 'addComponentsVariables',
             'Enlight_Controller_Action_PreDispatch_Frontend' => 'addViewDirectory',
-            'Enlight_Controller_Action_PreDispatch_Frontend_Checkout'=>'getController',
+            'Enlight_Controller_Action_PreDispatch_Frontend_Checkout' => 'getController',
+            'Enlight_Controller_Action_PostDispatch_Frontend_Checkout' => 'onFrontendCheckoutShippingPaymentPostDispatch',
             'Theme_Compiler_Collect_Plugin_Javascript' => 'onCollectJavascript',
             'Theme_Compiler_Collect_Plugin_Less' => 'onCollectLess',
         ];
@@ -99,18 +101,51 @@ class FrontendViewSubscriber implements SubscriberInterface
         /** @var Enlight_View $view */
         $view = null;
 
-        if (!empty($controller))
+        if (!empty($controller)) {
             $view = $controller->view();
+        }
 
         if ($session !== null && $view !== null &&
             ($session->mollieError || $session->mollieStatusError)) {
-
             // assign errors to view
             $view->assign('sMollieError', $session->mollieError);
             $view->assign('sMollieStatusError', $session->mollieStatusError);
 
             // unset error, so it wont show up on next page view
             $session->mollieStatusError = $session->mollieError = null;
+        }
+    }
+
+    /**
+     * @param Enlight_Event_EventArgs $args
+     */
+    public function onFrontendCheckoutShippingPaymentPostDispatch(Enlight_Event_EventArgs $args)
+    {
+        if ($args->getRequest()->getActionName() !== 'shippingPayment') {
+            return;
+        }
+
+        /** @var Enlight_View $view */
+        $view = $args->getSubject()->View();
+
+        $sPayments = $view->getAssign('sPayments');
+        $this->removeApplePayDirectFromPaymentMeans($sPayments);
+
+        $view->assign('sPayments', $sPayments);
+    }
+
+    /**
+     * Remove "Apple Pay Direct" payment method from sPayments to avoid
+     * that a user will be able to choose this payment method in the checkout
+     * @param array $sPayments
+     */
+    private function removeApplePayDirectFromPaymentMeans(array &$sPayments)
+    {
+        foreach ($sPayments as $index => $payment) {
+            if ($payment['name'] === 'mollie_' . PaymentMethod::APPLEPAY_DIRECT) {
+                unset($sPayments[$index]);
+                break;
+            }
         }
     }
 
