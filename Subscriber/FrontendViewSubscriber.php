@@ -7,17 +7,24 @@ use Enlight\Event\SubscriberInterface;
 use Enlight_Controller_Action;
 use Enlight_Event_EventArgs;
 use Enlight_View;
+use Exception;
 use Mollie\Api\Types\PaymentMethod;
 use MollieShopware\Components\Config;
+use MollieShopware\Components\Services\PaymentMethodService;
 use Shopware\Components\Theme\LessDefinition;
+use Shopware\Models\Payment\Payment;
 
 class FrontendViewSubscriber implements SubscriberInterface
 {
+
+    const APPLEPAY_DIRECT_NAME = 'mollie_' . PaymentMethod::APPLEPAY_DIRECT;
+
     public static function getSubscribedEvents()
     {
         return [
             'Enlight_Controller_Action_PreDispatch' => 'addComponentsVariables',
             'Enlight_Controller_Action_PreDispatch_Frontend' => 'addViewDirectory',
+            'Enlight_Controller_Action_PostDispatch_Frontend' => 'onFrontendPostDispatch',
             'Enlight_Controller_Action_PreDispatch_Frontend_Checkout' => 'getController',
             'Enlight_Controller_Action_PostDispatch_Frontend_Checkout' => 'onFrontendCheckoutShippingPaymentPostDispatch',
             'Theme_Compiler_Collect_Plugin_Javascript' => 'onCollectJavascript',
@@ -118,6 +125,25 @@ class FrontendViewSubscriber implements SubscriberInterface
 
     /**
      * @param Enlight_Event_EventArgs $args
+     * @throws Exception
+     */
+    public function onFrontendPostDispatch(Enlight_Event_EventArgs $args)
+    {
+        /** @var PaymentMethodService $paymentMethodService */
+        $paymentMethodService = Shopware()->Container()->get('mollie_shopware.payment_method_service');
+
+        $applePayDirect = $paymentMethodService->getPaymentMethod(
+            [
+                'name' => self::APPLEPAY_DIRECT_NAME,
+                'active' => true,
+            ]
+        );
+
+        $args->getSubject()->View()->assign('sMollieApplePayDirectIsActive', ($applePayDirect instanceof Payment));
+    }
+
+    /**
+     * @param Enlight_Event_EventArgs $args
      */
     public function onFrontendCheckoutShippingPaymentPostDispatch(Enlight_Event_EventArgs $args)
     {
@@ -142,7 +168,7 @@ class FrontendViewSubscriber implements SubscriberInterface
     private function removeApplePayDirectFromPaymentMeans(array &$sPayments)
     {
         foreach ($sPayments as $index => $payment) {
-            if ($payment['name'] === 'mollie_' . PaymentMethod::APPLEPAY_DIRECT) {
+            if ($payment['name'] === self::APPLEPAY_DIRECT_NAME) {
                 unset($sPayments[$index]);
                 break;
             }
