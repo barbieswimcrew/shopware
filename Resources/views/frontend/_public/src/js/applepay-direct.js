@@ -43,7 +43,7 @@
 
                 session.onvalidatemerchant = function (e) {
                     $.post(
-                        button.dataset.url,
+                        button.dataset.validationUrl,
                         {
                             domain: button.dataset.domain,
                             validationUrl: e.validationURL
