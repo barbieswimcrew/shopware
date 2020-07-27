@@ -1,11 +1,12 @@
-(function($) {
+(function ($) {
     "use strict";
 
     var applePayApiVersion = 3;
     var applePayButtonSelector = '.applepay-button';
     var merchantIdentifier = 'https://www.dasistweb.de/de/';
 
-    $(document).ready(function() {
+    $(document).ready(function () {
+
         /**
          * Verify if Apple Pay JS API is available and
          * whether the device supports Apple Pay
@@ -16,38 +17,47 @@
 
         var buttons = document.querySelectorAll(applePayButtonSelector);
 
-        buttons.forEach(function(button) {
+        buttons.forEach(function (button) {
+
             // Display the apple pay button
             button.style.display = 'inline-block';
-            console.log(button.dataset.url);
-            button.addEventListener('click', function(e) {
-                var session = createApplePaySession();
-                session.begin();
 
+            button.addEventListener('click', function (e) {
+                var session = createApplePaySession(
+                    button.dataset.label,
+                    button.dataset.amount,
+                    button.dataset.country,
+                    button.dataset.currency
+                );
 
-                session.onvalidatemerchant = function(e) {
+                session.onvalidatemerchant = function (e) {
+                    console.log('validating merchant');
                     console.log(e);
+
                     $.post(
                         button.dataset.url,
                         {
-                            domain: 'mollie-local.diwc.de',
+                            domain: button.dataset.domain,
                             validationUrl: e.validationURL
                         }
-                    ).done(function(response) {
-                        console.log('success');
+                    ).done(function (response) {
                         console.log(response);
-                    }).fail(function() {
+                        session.completeMerchantValidation(response);
+
+                    }).fail(function () {
                         console.log('error');
                     });
                 }
+
+                session.begin();
             });
         });
     });
 
-    function createApplePaySession() {
+    function createApplePaySession(label, amount, country, currency) {
         var request = {
-            countryCode: 'DE',
-            currencyCode: 'EUR',
+            countryCode: country,
+            currencyCode: currency,
             supportedNetworks: [
                 'amex',
                 'maestro',
@@ -57,8 +67,8 @@
             ],
             merchantCapabilities: ['supports3DS'],
             total: {
-                label: 'Your Merchant Name',
-                amount: '10.00'
+                label: label,
+                amount: amount
             },
         };
         return new ApplePaySession(applePayApiVersion, request);

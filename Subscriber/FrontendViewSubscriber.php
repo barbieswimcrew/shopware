@@ -8,8 +8,9 @@ use Enlight_Controller_Action;
 use Enlight_Event_EventArgs;
 use Enlight_View;
 use Exception;
-use Mollie\Api\Types\PaymentMethod;
+use MollieShopware\Components\ApplePayDirect\ApplePayDirect;
 use MollieShopware\Components\Config;
+use MollieShopware\Components\Constants\PaymentMethod;
 use MollieShopware\Components\Services\PaymentMethodService;
 use Shopware\Components\Theme\LessDefinition;
 use Shopware\Models\Payment\Payment;
@@ -125,21 +126,20 @@ class FrontendViewSubscriber implements SubscriberInterface
 
     /**
      * @param Enlight_Event_EventArgs $args
-     * @throws Exception
      */
     public function onFrontendPostDispatch(Enlight_Event_EventArgs $args)
     {
-        /** @var PaymentMethodService $paymentMethodService */
-        $paymentMethodService = Shopware()->Container()->get('mollie_shopware.payment_method_service');
+        /** @var \Enlight_Controller_Request_Request $request */
+        $request = $args->getRequest();
 
-        $applePayDirect = $paymentMethodService->getPaymentMethod(
-            [
-                'name' => self::APPLEPAY_DIRECT_NAME,
-                'active' => true,
-            ]
-        );
+        /** @var Enlight_View $view */
+        $view = $args->getSubject()->View();
 
-        $args->getSubject()->View()->assign('sMollieApplePayDirectIsActive', ($applePayDirect instanceof Payment));
+        # add the apple pay direct data for our current view.
+        # the data depends on our page.
+        # this might either be a product on PDP, or the full cart data
+        $applePay = new ApplePayDirect(Shopware()->Shop());
+        $applePay->addPageData($request, $view);
     }
 
     /**
@@ -161,21 +161,6 @@ class FrontendViewSubscriber implements SubscriberInterface
     }
 
     /**
-     * Remove "Apple Pay Direct" payment method from sPayments to avoid
-     * that a user will be able to choose this payment method in the checkout
-     * @param array $sPayments
-     */
-    private function removeApplePayDirectFromPaymentMeans(array &$sPayments)
-    {
-        foreach ($sPayments as $index => $payment) {
-            if ($payment['name'] === self::APPLEPAY_DIRECT_NAME) {
-                unset($sPayments[$index]);
-                break;
-            }
-        }
-    }
-
-    /**
      * Collects javascript files.
      *
      * @param Enlight_Event_EventArgs $args
@@ -187,8 +172,7 @@ class FrontendViewSubscriber implements SubscriberInterface
         $collection = new ArrayCollection();
 
         // Add the javascript files to the collection
-        $collection->add(__DIR__ . '/../Resources/views/frontend/_public/src/js/applepay.js');
-        $collection->add(__DIR__ . '/../Resources/views/frontend/_public/src/js/applepay-integration.js');
+        $collection->add(__DIR__ . '/../Resources/views/frontend/_public/src/js/applepay-direct.js');
 
         return $collection;
     }
@@ -214,4 +198,20 @@ class FrontendViewSubscriber implements SubscriberInterface
 
         return new ArrayCollection([$less]);
     }
+
+    /**
+     * Remove "Apple Pay Direct" payment method from sPayments to avoid
+     * that a user will be able to choose this payment method in the checkout
+     * @param array $sPayments
+     */
+    private function removeApplePayDirectFromPaymentMeans(array &$sPayments)
+    {
+        foreach ($sPayments as $index => $payment) {
+            if ($payment['name'] === self::APPLEPAY_DIRECT_NAME) {
+                unset($sPayments[$index]);
+                break;
+            }
+        }
+    }
+
 }
