@@ -371,14 +371,13 @@ class Shopware_Controllers_Frontend_Mollie extends AbstractPaymentController
 
         } catch (Exception $ex) {
 
-            http_response_code(500);
-
-            $data = array(
-                'error' => true,
-                'message' => $ex->getMessage(),
+            Logger::log(
+                'error',
+                $ex->getMessage(),
+                $ex
             );
 
-            echo json_encode($data);
+            http_response_code(500);
             die();
         }
     }
