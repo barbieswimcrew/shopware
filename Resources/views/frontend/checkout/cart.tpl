@@ -4,7 +4,7 @@
     {$smarty.block.parent}
     {block name="frontend_checkout_includes_apple_pay_direct_top"}
         <div class="apple-pay--container">
-            {include 'frontend/_includes/apple_pay_direct_button.tpl'}
+            {include 'frontend/plugins/payment/mollie_applepay_direct.tpl'}
         </div>
     {/block}
 {/block}
@@ -13,7 +13,7 @@
     {$smarty.block.parent}
     {block name="frontend_checkout_includes_apple_pay_direct_bottom"}
         <div class="apple-pay--container">
-            {include 'frontend/_includes/apple_pay_direct_button.tpl'}
+            {include 'frontend/plugins/payment/mollie_applepay_direct.tpl'}
         </div>
     {/block}
 {/block}
