@@ -41,11 +41,11 @@
                             validationUrl: e.validationURL
                         }
                     ).done(function (response) {
-                        console.log(response);
-                        session.completeMerchantValidation(response);
-
-                    }).fail(function () {
-                        console.log('error');
+                            console.log(response);
+                            session.completeMerchantValidation(response);
+                        }
+                    ).fail(function (xhr, status, error) {
+                        console.log(error);
                     });
                 }
 

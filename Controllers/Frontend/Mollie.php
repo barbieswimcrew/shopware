@@ -362,10 +362,25 @@ class Shopware_Controllers_Frontend_Mollie extends AbstractPaymentController
         /** @var \Mollie\Api\MollieApiClient $mollieApi */
         $mollieApi = $this->getMollieApi();
 
-        return $mollieApi->wallets->requestApplePayPaymentSession(
-            $this->Request()->getParam('domain'),
-            $this->Request()->getParam('validationUrl')
-        );
+        $domain = $this->Request()->getParam('domain');
+        $validationUrl = $this->Request()->getParam('validationUrl');
+
+        try {
+
+            return $mollieApi->wallets->requestApplePayPaymentSession($domain, $validationUrl);
+
+        } catch (Exception $ex) {
+
+            http_response_code(500);
+
+            $data = array(
+                'error' => true,
+                'message' => $ex->getMessage(),
+            );
+
+            echo json_encode($data);
+            die();
+        }
     }
 
     private function prepareTransaction(\MollieShopware\Models\Transaction $transaction, $basketSignature)
