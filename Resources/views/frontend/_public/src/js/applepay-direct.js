@@ -46,6 +46,12 @@
                     });
                 }
 
+                session.onpaymentauthorized = function (e) {
+                    const payment = e.payment;
+                    let token = e.payment.token;
+                    token = JSON.stringify(token);
+                }
+
                 session.begin();
             });
         });
