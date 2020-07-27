@@ -3,6 +3,7 @@
 use Mollie\Api\Exceptions\ApiException;
 use Mollie\Api\MollieApiClient;
 use Mollie\Api\Resources\Profile;
+use MollieShopware\Components\ApplePayDirect\ApplePayDirect;
 use MollieShopware\Components\Logger;
 use MollieShopware\Components\Notifier;
 use MollieShopware\Components\Constants\PaymentStatus;
@@ -355,29 +356,30 @@ class Shopware_Controllers_Frontend_Mollie extends AbstractPaymentController
         return $this->redirectBack();
     }
 
+    /**
+     * @throws Exception
+     */
     public function requestApplePayPaymentSessionAction()
     {
         Shopware()->Plugins()->Controller()->ViewRenderer()->setNoRender();
 
-        /** @var \Mollie\Api\MollieApiClient $mollieApi */
-        $mollieApi = $this->getMollieApi();
-
-        $domain = $this->Request()->getParam('domain');
-        $validationUrl = $this->Request()->getParam('validationUrl');
-
         try {
 
-            $responseString = $mollieApi->wallets->requestApplePayPaymentSession($domain, $validationUrl);
+            $applePay = new ApplePayDirect(Shopware()->Shop());
 
-            echo $responseString;
-            
+            /** @var \Mollie\Api\MollieApiClient $mollieApi */
+            $mollieApi = $this->getMollieApi();
+
+            $domain = (string)$this->Request()->getParam('domain');
+            $validationUrl = (string)$this->Request()->getParam('validationUrl');
+
+            $response = $applePay->requestPaymentSession($mollieApi, $domain, $validationUrl);
+
+            echo $response;
+
         } catch (Exception $ex) {
 
-            Logger::log(
-                'error',
-                $ex->getMessage(),
-                $ex
-            );
+            Logger::log('error', $ex->getMessage(), $ex);
 
             http_response_code(500);
             die();

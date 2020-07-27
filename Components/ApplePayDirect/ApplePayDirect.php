@@ -4,6 +4,7 @@ namespace MollieShopware\Components\ApplePayDirect;
 
 use Enlight_Controller_Request_Request;
 use Enlight_View;
+use Mollie\Api\MollieApiClient;
 use MollieShopware\Components\Constants\PaymentMethod;
 use MollieShopware\Components\Services\PaymentMethodService;
 use Shopware\Models\Payment\Payment;
@@ -25,6 +26,7 @@ class ApplePayDirect
 
     /**
      * @param Shop $shop
+     * @param MollieApiClient $client
      */
     public function __construct(Shop $shop)
     {
@@ -65,6 +67,19 @@ class ApplePayDirect
         );
 
         $view->assign('sMollieApplePayDirect', $data);
+    }
+
+    /**
+     * @param MollieApiClient $client
+     * @param $domain
+     * @param $validationUrl
+     * @return false|string
+     */
+    public function requestPaymentSession(MollieApiClient $client, $domain, $validationUrl)
+    {
+        $responseString = $client->wallets->requestApplePayPaymentSession($domain, $validationUrl);
+
+        return $responseString;
     }
 
     /**
