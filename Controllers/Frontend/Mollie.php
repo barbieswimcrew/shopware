@@ -367,8 +367,10 @@ class Shopware_Controllers_Frontend_Mollie extends AbstractPaymentController
 
         try {
 
-            return $mollieApi->wallets->requestApplePayPaymentSession($domain, $validationUrl);
+            $responseString = $mollieApi->wallets->requestApplePayPaymentSession($domain, $validationUrl);
 
+            echo $responseString;
+            
         } catch (Exception $ex) {
 
             Logger::log(

@@ -31,21 +31,18 @@
                 );
 
                 session.onvalidatemerchant = function (e) {
-                    console.log('validating merchant');
-                    console.log(e);
-
                     $.post(
                         button.dataset.url,
                         {
                             domain: button.dataset.domain,
                             validationUrl: e.validationURL
                         }
-                    ).done(function (response) {
-                            console.log(response);
-                            session.completeMerchantValidation(response);
+                    ).done(function (validationData) {
+                            validationData = JSON.parse(validationData);
+                            session.completeMerchantValidation(validationData);
                         }
                     ).fail(function (xhr, status, error) {
-                        console.log(error);
+                        session.abort();
                     });
                 }
 
