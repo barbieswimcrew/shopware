@@ -3,14 +3,9 @@
 
     var applePayApiVersion = 3;
     var applePayButtonSelector = '.applepay-button';
-    var merchantIdentifier = 'https://www.dasistweb.de/de/';
 
     $(document).ready(function () {
 
-        /**
-         * Verify if Apple Pay JS API is available and
-         * whether the device supports Apple Pay
-         */
         if (!window.ApplePaySession || !window.ApplePaySession.canMakePayments()) {
             return;
         }
