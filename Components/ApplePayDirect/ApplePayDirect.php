@@ -26,7 +26,6 @@ class ApplePayDirect
 
     /**
      * @param Shop $shop
-     * @param MollieApiClient $client
      */
     public function __construct(Shop $shop)
     {
@@ -38,7 +37,7 @@ class ApplePayDirect
      * @param Enlight_Controller_Request_Request $request
      * @param Enlight_View $view
      */
-    public function addPageData(Enlight_Controller_Request_Request $request, Enlight_View $view)
+    public function addViewData(Enlight_Controller_Request_Request $request, Enlight_View $view)
     {
         /** @var string $controller */
         $controller = $request->getControllerName();
@@ -71,15 +70,15 @@ class ApplePayDirect
 
     /**
      * @param MollieApiClient $client
-     * @param $domain
-     * @param $validationUrl
-     * @return false|string
+     * @param string $domain
+     * @param string $validationUrl
+     * @return string
      */
     public function requestPaymentSession(MollieApiClient $client, $domain, $validationUrl)
     {
         $responseString = $client->wallets->requestApplePayPaymentSession($domain, $validationUrl);
 
-        return $responseString;
+        return (string)$responseString;
     }
 
     /**

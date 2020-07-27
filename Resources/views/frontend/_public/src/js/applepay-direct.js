@@ -18,7 +18,7 @@
             button.style.display = 'inline-block';
 
             button.addEventListener('click', function (e) {
-                var session = createApplePaySession(
+                const session = createApplePaySession(
                     button.dataset.label,
                     button.dataset.amount,
                     button.dataset.country,
