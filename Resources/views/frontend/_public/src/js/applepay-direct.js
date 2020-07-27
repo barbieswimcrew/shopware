@@ -30,6 +30,22 @@
                     button.dataset.currency
                 );
 
+                session.onpaymentmethodselected = function (e) {
+                    console.log(e);
+                };
+
+                session.onshippingcontactselected = function (e) {
+                    console.log(e);
+                };
+
+                session.onshippingmethodselected = function (e) {
+                    console.log(e);
+                };
+
+                session.oncancel = function () {
+                    session.abort();
+                };
+
                 session.onvalidatemerchant = function (e) {
                     $.post(
                         button.dataset.url,
