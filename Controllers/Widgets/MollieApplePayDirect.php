@@ -11,6 +11,66 @@ use MollieShopware\Components\Logger;
 class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Controllers_Frontend_Checkout
 {
 
+
+    /**
+     *
+     */
+    public function getShippingsAction()
+    {
+        $applePay = new ApplePayDirect(Shopware()->Shop());
+
+        $cart = $applePay->getApplePayCart($this->basket);
+
+        $data = array(
+            'cart' => $cart->toArray(),
+            'shippingmethods' => array(
+                array(
+                    'identifier' => 123,
+                    'label' => 'Standard Shipping',
+                    'detail' => '3-5 days',
+                    'amount' => 10.5,
+                ),
+                array(
+                    'identifier' => 555,
+                    'label' => 'Express Shipping',
+                    'detail' => '1.2 days',
+                    'amount' => 25.5,
+                ),
+            ),
+        );
+
+        echo json_encode($data);
+        die();
+    }
+
+    /**
+     *
+     */
+    public function setShippingAction()
+    {
+        $shippingIdentifier = $this->Request()->getParam('identifier', '');
+
+        $applePay = new ApplePayDirect(Shopware()->Shop());
+
+        $cart = $applePay->getApplePayCart($this->basket);
+
+        $data = array(
+            'cart' => $cart->toArray(),
+            'id' => $shippingIdentifier,
+        );
+
+        echo json_encode($data);
+        die();
+    }
+
+    /**
+     *
+     */
+    public function restoreCartAction()
+    {
+    }
+
+
     /**
      * @throws Exception
      */

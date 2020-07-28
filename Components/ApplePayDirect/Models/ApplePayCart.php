@@ -6,18 +6,8 @@ namespace MollieShopware\Components\ApplePayDirect\Models;
 /**
  * @copyright 2020 dasistweb GmbH (https://www.dasistweb.de)
  */
-class ApplePayStruct
+class ApplePayCart
 {
-
-    /**
-     * @var bool
-     */
-    private $active;
-
-    /**
-     * @var string
-     */
-    private $mode;
 
     /**
      * @var string
@@ -41,41 +31,15 @@ class ApplePayStruct
 
 
     /**
-     * @param $active
      * @param $country
      * @param $currency
      */
-    public function __construct($active, $country, $currency)
+    public function __construct($country, $currency)
     {
-        $this->active = $active;
         $this->country = $country;
         $this->currency = $currency;
 
         $this->items = array();
-    }
-
-    /**
-     * @return bool
-     */
-    public function isActive(): bool
-    {
-        return $this->active;
-    }
-
-    /**
-     * @return string
-     */
-    public function getMode(): string
-    {
-        return $this->mode;
-    }
-
-    /**
-     * @param string $mode
-     */
-    public function setMode(string $mode): void
-    {
-        $this->mode = $mode;
     }
 
     /**
@@ -150,12 +114,14 @@ class ApplePayStruct
     public function toArray()
     {
         $data = array(
-            'active' => $this->active,
-            'mode' => $this->mode,
+            # apple pay required
+            # -------------------------------
             'label' => $this->label,
             'amount' => $this->getAmount(),
             'country' => $this->country,
             'currency' => $this->currency,
+            # additional
+            # -------------------------------
             'items' => array(),
         );
 
@@ -163,12 +129,23 @@ class ApplePayStruct
         foreach ($this->items as $item) {
 
             $data['items'][] = array(
+                # apple pay required
+                # -------------------------------
+                'label' => $item->getName(),
+                'type' => 'final',
+                'amount' => $item->getPrice(),
+                # additional
+                # -------------------------------
                 'number' => $item->getNumber(),
-                'name' => $item->getName(),
                 'quantity' => $item->getQuantity(),
-                'price' => $item->getPrice(),
             );
         }
+
+        $data['total'] = array(
+            'label' => $this->label,
+            'amount' => $this->getAmount(),
+            'type' => 'final',
+        );
 
         return $data;
     }

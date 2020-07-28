@@ -71,7 +71,7 @@ class ApplePayDirectSubscriber implements SubscriberInterface
         # the data depends on our page.
         # this might either be a product on PDP, or the full cart data
         $applePay = new ApplePayDirect(Shopware()->Shop());
-        $applePay->addViewData($request, $view);
+        $applePay->addButtonStatus($request, $view);
     }
 
     /**

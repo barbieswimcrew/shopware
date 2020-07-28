@@ -5,7 +5,8 @@ namespace MollieShopware\Components\ApplePayDirect;
 use Enlight_Controller_Request_Request;
 use Enlight_View;
 use Mollie\Api\MollieApiClient;
-use MollieShopware\Components\ApplePayDirect\Models\ApplePayStruct;
+use MollieShopware\Components\ApplePayDirect\Models\ApplePayCart;
+use MollieShopware\Components\ApplePayDirect\Models\ApplePayButton;
 use MollieShopware\Components\Constants\PaymentMethod;
 use MollieShopware\Components\Services\PaymentMethodService;
 use Shopware\Models\Payment\Payment;
@@ -18,6 +19,9 @@ class ApplePayDirect
 {
 
     const APPLEPAY_DIRECT_NAME = 'mollie_' . PaymentMethod::APPLEPAY_DIRECT;
+
+    const KEY_MOLLIE_APPLEPAY_BUTTON = 'sMollieApplePayDirectButton';
+
 
     /**
      * @var Shop
@@ -35,43 +39,60 @@ class ApplePayDirect
 
 
     /**
-     * @param Enlight_Controller_Request_Request $request
-     * @param Enlight_View $view
+     * @param \sBasket $basket
+     * @return ApplePayCart
+     * @throws \Enlight_Exception
      */
-    public function addViewData(Enlight_Controller_Request_Request $request, Enlight_View $view)
+    public function getApplePayCart(\sBasket $basket)
     {
-        /** @var string $controller */
-        $controller = $request->getControllerName();
-
-
-        $applePayData = new ApplePayStruct(
-            $this->isApplePayDirectAvailable(),
+        $cart = new ApplePayCart(
             'DE', # todo country, von wo?
             $this->shop->getCurrency()->getCurrency()
         );
 
+        /** @var array $item */
+        foreach ($basket->sGetBasketData()['content'] as $item) {
+            $cart->addItem(
+                $item['ordernumber'],
+                $item['articlename'],
+                (int)$item['quantity'],
+                $item['price']
+            );
+        }
+
+        # if we are on PDP then our apple pay label and amount
+        # is the one from our article
+        $cart->setLabel($this->shop->getName());
+
+        return $cart;
+    }
+
+
+    /**
+     * @param Enlight_Controller_Request_Request $request
+     * @param Enlight_View $view
+     */
+    public function addButtonStatus(Enlight_Controller_Request_Request $request, Enlight_View $view)
+    {
+        /** @var string $controller */
+        $controller = $request->getControllerName();
+
+        $country = 'DE'; # todo country, von wo?;
+
+        $button = new ApplePayButton(
+            $this->isApplePayDirectAvailable(),
+            $country,
+            $this->shop->getCurrency()->getCurrency()
+        );
 
         switch (strtolower($controller)) {
             case 'detail':
                 $vars = $view->getAssign();
-
-                $applePayData->setMode('item');
-
-                $applePayData->addItem(
-                    $vars["sArticle"]["ordernumber"],
-                    $vars["sArticle"]["articleName"],
-                    1,
-                    $vars["sArticle"]["price_numeric"]
-                );
-
-                # if we are on PDP then our apple pay label and amount
-                # is the one from our article
-                $applePayData->setLabel($vars["sArticle"]["articleName"]);
-
+                $button->setItemMode($vars["sArticle"]["ordernumber"]);
                 break;
         }
 
-        $view->assign('sMollieApplePayDirect', $applePayData->toArray());
+        $view->assign(self::KEY_MOLLIE_APPLEPAY_BUTTON, $button->toArray());
     }
 
     /**
