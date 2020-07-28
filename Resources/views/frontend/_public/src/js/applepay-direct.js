@@ -25,9 +25,9 @@
                     button.dataset.currency
                 );
 
-                session.onpaymentmethodselected = function (e) {
-                    console.log(e);
-                };
+                //   session.onpaymentmethodselected = function (e) {
+                //      console.log(e);
+                //   };
 
                 session.onshippingcontactselected = function (e) {
                     console.log(e);
@@ -38,29 +38,35 @@
                 };
 
                 session.oncancel = function () {
-                    session.abort();
+                    console.log('Apple Pay: onCancel');
                 };
 
                 session.onvalidatemerchant = function (e) {
+                    console.log('Apple Pay: Validating Merchant Session');
                     $.post(
                         button.dataset.validationurl,
                         {
-                            domain: button.dataset.domain,
                             validationUrl: e.validationURL
                         }
                     ).done(function (validationData) {
                             validationData = JSON.parse(validationData);
                             session.completeMerchantValidation(validationData);
+                            console.log('verified');
                         }
                     ).fail(function (xhr, status, error) {
+                        console.log('Apple Pay Error: ' + error);
                         session.abort();
                     });
                 }
 
                 session.onpaymentauthorized = function (e) {
-                    const payment = e.payment;
-                    let token = e.payment.token;
-                    token = JSON.stringify(token);
+                    console.log('Apple Pay: Authorized');
+                    let paymentToken = e.payment.token;
+                    paymentToken = JSON.stringify(paymentToken);
+
+                    console.log('Apple Pay Token: ' + paymentToken);
+
+                    createAddProductForm(button.dataset.checkouturl, paymentToken);
                 }
 
                 session.begin();
@@ -84,8 +90,67 @@
                 label: label,
                 amount: amount
             },
+            lineItems: [
+                {
+                    "label": "Bag Subtotal",
+                    "type": "final",
+                    "amount": "35.00"
+                },
+                {
+                    "label": "Free Shipping",
+                    "amount": "0.00",
+                    "type": "final"
+                },
+                {
+                    "label": "Estimated Tax",
+                    "amount": "3.06",
+                    "type": "final"
+                }
+            ]
         };
+
         return new ApplePaySession(applePayApiVersion, request);
+    }
+
+    /**
+     *
+     * @param checkoutURL
+     * @param paymentToken
+     */
+    function createAddProductForm(checkoutURL, paymentToken) {
+
+        let token = '';
+
+        if (CSRF.checkToken()) {
+            token = CSRF.getToken();
+        }
+
+        var me = this,
+            $form,
+            createField = function (name, val) {
+                return $('<input>', {
+                    type: 'hidden',
+                    name: name,
+                    value: val
+                });
+            };
+
+        $form = $('<form>', {
+            action: checkoutURL,
+            method: 'POST'
+        });
+
+        createField('addProduct', true).appendTo($form);
+        createField('productNumber', 'abc').appendTo($form);
+        createField('productQuantity', 1).appendTo($form);
+        createField('paymentToken', paymentToken).appendTo($form);
+        createField('__csrf_token', token).appendTo($form);
+
+        $form.appendTo($('body'));
+
+        console.log('form created');
+
+        $form.submit();
     }
 
 }(jQuery));

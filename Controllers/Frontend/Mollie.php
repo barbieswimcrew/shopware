@@ -356,36 +356,6 @@ class Shopware_Controllers_Frontend_Mollie extends AbstractPaymentController
         return $this->redirectBack();
     }
 
-    /**
-     * @throws Exception
-     */
-    public function requestApplePayPaymentSessionAction()
-    {
-        Shopware()->Plugins()->Controller()->ViewRenderer()->setNoRender();
-
-        try {
-
-            $applePay = new ApplePayDirect(Shopware()->Shop());
-
-            /** @var \Mollie\Api\MollieApiClient $mollieApi */
-            $mollieApi = $this->getMollieApi();
-
-            $domain = (string)$this->Request()->getParam('domain');
-            $validationUrl = (string)$this->Request()->getParam('validationUrl');
-
-            $response = $applePay->requestPaymentSession($mollieApi, $domain, $validationUrl);
-
-            echo $response;
-
-        } catch (Exception $ex) {
-
-            Logger::log('error', $ex->getMessage(), $ex);
-
-            http_response_code(500);
-            die();
-        }
-    }
-
     private function prepareTransaction(\MollieShopware\Models\Transaction $transaction, $basketSignature)
     {
         try {

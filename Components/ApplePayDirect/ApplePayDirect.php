@@ -42,30 +42,35 @@ class ApplePayDirect
         /** @var string $controller */
         $controller = $request->getControllerName();
 
-        $applePayDirectActive = false;
-        $label = '';
-        $amount = 0;
+
+        $applePayData = new ApplePayViewData(
+            $this->isApplePayDirectAvailable(),
+            'DE', # todo country, von wo?
+            $this->shop->getCurrency()->getCurrency()
+        );
+
 
         switch (strtolower($controller)) {
             case 'detail':
                 $vars = $view->getAssign();
 
-                $applePayDirectActive = $this->isApplePayDirectAvailable();
-                $label = $vars["sArticle"]["articleName"];
-                $amount = $vars["sArticle"]["price_numeric"];
+                $applePayData->setMode('item');
+
+                $applePayData->addItem(
+                    $vars["sArticle"]["ordernumber"],
+                    $vars["sArticle"]["articleName"],
+                    1,
+                    $vars["sArticle"]["price_numeric"]
+                );
+
+                # if we are on PDP then our apple pay label and amount
+                # is the one from our article
+                $applePayData->setLabel($vars["sArticle"]["articleName"]);
+
                 break;
         }
 
-        $data = array(
-            'active' => $applePayDirectActive,
-            'label' => $label,
-            'amount' => $amount,
-            'country' => 'DE',
-            'currency' => $this->shop->getCurrency()->getCurrency(),
-            'domain' => $this->shop->getHost(),
-        );
-
-        $view->assign('sMollieApplePayDirect', $data);
+        $view->assign('sMollieApplePayDirect', $applePayData->toArray());
     }
 
     /**
