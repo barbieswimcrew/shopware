@@ -96,5 +96,10 @@
             <tag name="shopware.event_subscriber" />
         </service>
 
+        <service id="mollie_shopware.subscriber.applepay_direct" class="MollieShopware\Subscriber\ApplePayDirectSubscriber">
+            <tag name="shopware.event_subscriber" />
+        </service>
+
+
     </services>
 </container>

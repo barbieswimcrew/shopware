@@ -9,6 +9,8 @@
        data-country="{$sMollieApplePayDirect.country}"
        data-currency="{$sMollieApplePayDirect.currency}"
         {if $sMollieApplePayDirect.mode == 'item'}
+            data-number="{$sMollieApplePayDirect.items[0].number}"
+            data-qty="{$sMollieApplePayDirect.items[0].quantity}"
         {/if}
     ></a>
 {/if}

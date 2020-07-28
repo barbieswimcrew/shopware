@@ -1,12 +1,12 @@
 <?php
 
-namespace MollieShopware\Components\ApplePayDirect;
+namespace MollieShopware\Components\ApplePayDirect\Models;
 
 
 /**
  * @copyright 2020 dasistweb GmbH (https://www.dasistweb.de)
  */
-class ApplePayViewData
+class ApplePayStruct
 {
 
     /**
@@ -35,7 +35,7 @@ class ApplePayViewData
     private $currency;
 
     /**
-     * @var array
+     * @var ApplePayLineItem[]
      */
     private $items;
 
@@ -101,12 +101,9 @@ class ApplePayViewData
     {
         $amount = 0;
 
-        /** @var array $item */
+        /** @var ApplePayLineItem $item */
         foreach ($this->items as $item) {
-            $qty = $item['quantity'];
-            $price = $item['price'];
-
-            $amount += ($qty * $price);
+            $amount += ($item->getQuantity() * $item->getPrice());
         }
 
         return $amount;
@@ -144,12 +141,7 @@ class ApplePayViewData
      */
     public function addItem($number, $name, $quantity, $price)
     {
-        $this->items[] = array(
-            'number' => $$number,
-            'name' => $name,
-            'quantity' => $quantity,
-            'price' => $price,
-        );
+        $this->items[] = new ApplePayLineItem($number, $name, $quantity, $price);
     }
 
     /**
@@ -157,15 +149,28 @@ class ApplePayViewData
      */
     public function toArray()
     {
-        return array(
+        $data = array(
             'active' => $this->active,
             'mode' => $this->mode,
             'label' => $this->label,
             'amount' => $this->getAmount(),
             'country' => $this->country,
             'currency' => $this->currency,
-            'items' => $this->items,
+            'items' => array(),
         );
+
+        /** @var ApplePayLineItem $item */
+        foreach ($this->items as $item) {
+
+            $data['items'][] = array(
+                'number' => $item->getNumber(),
+                'name' => $item->getName(),
+                'quantity' => $item->getQuantity(),
+                'price' => $item->getPrice(),
+            );
+        }
+
+        return $data;
     }
 
 }

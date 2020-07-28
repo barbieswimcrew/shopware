@@ -47,7 +47,30 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
      */
     public function createPaymentAction()
     {
-        die('dangl');
+        $basket = $this->basket;
+        $admin = $this->admin;
+
+        $addProductToBasket = $this->Request()->getParam('addProduct', false);
+
+        if ($addProductToBasket) {
+
+            // delete the cart,
+            // to make sure that only the selected product is transferred to Apple Pay
+            $basket->sDeleteBasket();
+
+            $productNumber = $this->Request()->getParam('productNumber');
+            $productQuantity = $this->Request()->getParam('productQuantity');
+
+            $basket->sAddArticle($productNumber, $productQuantity);
+
+            // add potential discounts or surcharges to prevent an amount mismatch
+            // on patching the new amount after the confirmation.
+            // only necessary if the customer directly checks out from product detail page
+            $countries = $admin->sGetCountryList();
+            $admin->sGetPremiumShippingcosts(reset($countries));
+        }
+
+        $this->redirect('/checkout/confirm');
     }
 
     /**

@@ -7,27 +7,18 @@ use Enlight\Event\SubscriberInterface;
 use Enlight_Controller_Action;
 use Enlight_Event_EventArgs;
 use Enlight_View;
-use Exception;
-use MollieShopware\Components\ApplePayDirect\ApplePayDirect;
 use MollieShopware\Components\Config;
-use MollieShopware\Components\Constants\PaymentMethod;
-use MollieShopware\Components\Services\PaymentMethodService;
 use Shopware\Components\Theme\LessDefinition;
-use Shopware\Models\Payment\Payment;
 
 class FrontendViewSubscriber implements SubscriberInterface
 {
-
-    const APPLEPAY_DIRECT_NAME = 'mollie_' . PaymentMethod::APPLEPAY_DIRECT;
 
     public static function getSubscribedEvents()
     {
         return [
             'Enlight_Controller_Action_PreDispatch' => 'addComponentsVariables',
             'Enlight_Controller_Action_PreDispatch_Frontend' => 'addViewDirectory',
-            'Enlight_Controller_Action_PostDispatch_Frontend' => 'onFrontendPostDispatch',
             'Enlight_Controller_Action_PreDispatch_Frontend_Checkout' => 'getController',
-            'Enlight_Controller_Action_PostDispatch_Frontend_Checkout' => 'onFrontendCheckoutShippingPaymentPostDispatch',
             'Theme_Compiler_Collect_Plugin_Javascript' => 'onCollectJavascript',
             'Theme_Compiler_Collect_Plugin_Less' => 'onCollectLess',
         ];
@@ -125,42 +116,6 @@ class FrontendViewSubscriber implements SubscriberInterface
     }
 
     /**
-     * @param Enlight_Event_EventArgs $args
-     */
-    public function onFrontendPostDispatch(Enlight_Event_EventArgs $args)
-    {
-        /** @var \Enlight_Controller_Request_Request $request */
-        $request = $args->getRequest();
-
-        /** @var Enlight_View $view */
-        $view = $args->getSubject()->View();
-
-        # add the apple pay direct data for our current view.
-        # the data depends on our page.
-        # this might either be a product on PDP, or the full cart data
-        $applePay = new ApplePayDirect(Shopware()->Shop());
-        $applePay->addViewData($request, $view);
-    }
-
-    /**
-     * @param Enlight_Event_EventArgs $args
-     */
-    public function onFrontendCheckoutShippingPaymentPostDispatch(Enlight_Event_EventArgs $args)
-    {
-        if ($args->getRequest()->getActionName() !== 'shippingPayment') {
-            return;
-        }
-
-        /** @var Enlight_View $view */
-        $view = $args->getSubject()->View();
-
-        $sPayments = $view->getAssign('sPayments');
-        $this->removeApplePayDirectFromPaymentMeans($sPayments);
-
-        $view->assign('sPayments', $sPayments);
-    }
-
-    /**
      * Collects javascript files.
      *
      * @param Enlight_Event_EventArgs $args
@@ -170,9 +125,6 @@ class FrontendViewSubscriber implements SubscriberInterface
     {
         // Create new array collection to add src files
         $collection = new ArrayCollection();
-
-        // Add the javascript files to the collection
-        $collection->add(__DIR__ . '/../Resources/views/frontend/_public/src/js/applepay-direct.js');
 
         return $collection;
     }
@@ -186,7 +138,6 @@ class FrontendViewSubscriber implements SubscriberInterface
     public function onCollectLess(Enlight_Event_EventArgs $args)
     {
         $lessFiles = [];
-        $lessFiles[] = __DIR__ . '/../Resources/views/frontend/_public/src/less/applepay-buttons.less';
         $lessFiles[] = __DIR__ . '/../Resources/views/frontend/_public/src/less/checkout.less';
         $lessFiles[] = __DIR__ . '/../Resources/views/frontend/_public/src/less/components.less';
 
@@ -197,21 +148,6 @@ class FrontendViewSubscriber implements SubscriberInterface
         );
 
         return new ArrayCollection([$less]);
-    }
-
-    /**
-     * Remove "Apple Pay Direct" payment method from sPayments to avoid
-     * that a user will be able to choose this payment method in the checkout
-     * @param array $sPayments
-     */
-    private function removeApplePayDirectFromPaymentMeans(array &$sPayments)
-    {
-        foreach ($sPayments as $index => $payment) {
-            if ($payment['name'] === self::APPLEPAY_DIRECT_NAME) {
-                unset($sPayments[$index]);
-                break;
-            }
-        }
     }
 
 }

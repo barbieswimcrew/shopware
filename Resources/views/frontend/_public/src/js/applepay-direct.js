@@ -66,7 +66,12 @@
 
                     console.log('Apple Pay Token: ' + paymentToken);
 
-                    createAddProductForm(button.dataset.checkouturl, paymentToken);
+                    createAddProductForm(
+                        button.dataset.checkouturl,
+                        paymentToken,
+                        button.dataset.number,
+                        button.dataset.qty
+                    );
                 }
 
                 session.begin();
@@ -117,7 +122,7 @@
      * @param checkoutURL
      * @param paymentToken
      */
-    function createAddProductForm(checkoutURL, paymentToken) {
+    function createAddProductForm(checkoutURL, paymentToken, productNumber, quantity) {
 
         let token = '';
 
@@ -141,8 +146,8 @@
         });
 
         createField('addProduct', true).appendTo($form);
-        createField('productNumber', 'abc').appendTo($form);
-        createField('productQuantity', 1).appendTo($form);
+        createField('productNumber', productNumber).appendTo($form);
+        createField('productQuantity', quantity).appendTo($form);
         createField('paymentToken', paymentToken).appendTo($form);
         createField('__csrf_token', token).appendTo($form);
 

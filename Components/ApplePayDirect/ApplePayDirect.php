@@ -5,6 +5,7 @@ namespace MollieShopware\Components\ApplePayDirect;
 use Enlight_Controller_Request_Request;
 use Enlight_View;
 use Mollie\Api\MollieApiClient;
+use MollieShopware\Components\ApplePayDirect\Models\ApplePayStruct;
 use MollieShopware\Components\Constants\PaymentMethod;
 use MollieShopware\Components\Services\PaymentMethodService;
 use Shopware\Models\Payment\Payment;
@@ -43,7 +44,7 @@ class ApplePayDirect
         $controller = $request->getControllerName();
 
 
-        $applePayData = new ApplePayViewData(
+        $applePayData = new ApplePayStruct(
             $this->isApplePayDirectAvailable(),
             'DE', # todo country, von wo?
             $this->shop->getCurrency()->getCurrency()
