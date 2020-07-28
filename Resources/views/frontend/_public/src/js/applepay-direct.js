@@ -26,6 +26,19 @@
                         button.dataset.currency
                     );
 
+                    if (button.dataset.addproducturl) {
+                        $.post(
+                            button.dataset.addproducturl,
+                            {
+                                number: button.dataset.productnumber,
+                                quantity: 1,
+                            }
+                        ).done(function (data) {
+                            }
+                        );
+                    }
+
+
                     /**
                      *
                      * @param e
@@ -110,13 +123,6 @@
                         paymentToken = JSON.stringify(paymentToken);
 
                         console.log('Apple Pay Token: ' + paymentToken);
-
-                        createAddProductForm(
-                            button.dataset.checkouturl,
-                            paymentToken,
-                            button.dataset.number,
-                            button.dataset.qty
-                        );
                     };
 
                     session.begin();
@@ -152,47 +158,6 @@
             };
 
             return new ApplePaySession(applePayApiVersion, request);
-        }
-
-
-        /**
-         *
-         * @param checkoutURL
-         * @param paymentToken
-         * @param productNumber
-         * @param quantity
-         */
-        function createAddProductForm(checkoutURL, paymentToken, productNumber, quantity) {
-
-            let token = '';
-
-            if (CSRF.checkToken()) {
-                token = CSRF.getToken();
-            }
-
-            var me = this,
-                $form,
-                createField = function (name, val) {
-                    return $('<input>', {
-                        type: 'hidden',
-                        name: name,
-                        value: val
-                    });
-                };
-
-            $form = $('<form>', {
-                action: checkoutURL,
-                method: 'POST'
-            });
-
-            createField('addProduct', true).appendTo($form);
-            createField('productNumber', productNumber).appendTo($form);
-            createField('productQuantity', quantity).appendTo($form);
-            createField('paymentToken', paymentToken).appendTo($form);
-            createField('__csrf_token', token).appendTo($form);
-
-            $form.appendTo($('body'));
-            $form.submit();
         }
 
     }

@@ -2,7 +2,6 @@
     <a class="applepay-button"
        lang="{$smarty.server.HTTP_ACCEPT_LANGUAGE}"
        style="-webkit-appearance: -apple-pay-button; -apple-pay-button-type: check-out; display: none;"
-       data-carturl="{url module=widgets controller="MollieApplePayDirect" action="getCart" forceSecure}"
        data-getshippingsurl="{url module=widgets controller="MollieApplePayDirect" action="getShippings" forceSecure}"
        data-setshippingurl="{url module=widgets controller="MollieApplePayDirect" action="setShipping" forceSecure}"
        data-restorecarturl="{url module=widgets controller="MollieApplePayDirect" action="restoreCart" forceSecure}"
@@ -13,6 +12,7 @@
        data-country="{$sMollieApplePayDirectButton.country}"
        data-currency="{$sMollieApplePayDirectButton.currency}"
             {if $sMollieApplePayDirectButton.itemMode}
+                data-addproducturl="{url module=widgets controller="MollieApplePayDirect" action="addProduct" forceSecure}"
                 data-productnumber="{$sMollieApplePayDirectButton.addNumber}"
             {/if}
     ></a>

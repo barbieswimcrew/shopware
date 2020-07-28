@@ -11,6 +11,33 @@ use MollieShopware\Components\Logger;
 class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Controllers_Frontend_Checkout
 {
 
+    /**
+     * @throws Enlight_Event_Exception
+     * @throws Enlight_Exception
+     * @throws Zend_Db_Adapter_Exception
+     */
+    public function addProductAction()
+    {
+        $basket = $this->basket;
+        $admin = $this->admin;
+
+        // delete the cart,
+        // to make sure that only the selected product is transferred to Apple Pay
+        $basket->sDeleteBasket();
+
+        $productNumber = $this->Request()->getParam('number');
+        $productQuantity = $this->Request()->getParam('quantity');
+
+        $basket->sAddArticle($productNumber, $productQuantity);
+
+        // add potential discounts or surcharges to prevent an amount mismatch
+        // on patching the new amount after the confirmation.
+        // only necessary if the customer directly checks out from product detail page
+        $countries = $admin->sGetCountryList();
+        $admin->sGetPremiumShippingcosts(reset($countries));
+
+        die();
+    }
 
     /**
      *
@@ -107,29 +134,6 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
      */
     public function createPaymentAction()
     {
-        $basket = $this->basket;
-        $admin = $this->admin;
-
-        $addProductToBasket = $this->Request()->getParam('addProduct', false);
-
-        if ($addProductToBasket) {
-
-            // delete the cart,
-            // to make sure that only the selected product is transferred to Apple Pay
-            $basket->sDeleteBasket();
-
-            $productNumber = $this->Request()->getParam('productNumber');
-            $productQuantity = $this->Request()->getParam('productQuantity');
-
-            $basket->sAddArticle($productNumber, $productQuantity);
-
-            // add potential discounts or surcharges to prevent an amount mismatch
-            // on patching the new amount after the confirmation.
-            // only necessary if the customer directly checks out from product detail page
-            $countries = $admin->sGetCountryList();
-            $admin->sGetPremiumShippingcosts(reset($countries));
-        }
-
         $this->redirect('/checkout/confirm');
     }
 
