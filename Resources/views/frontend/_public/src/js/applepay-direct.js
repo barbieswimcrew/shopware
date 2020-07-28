@@ -26,6 +26,7 @@
                         button.dataset.currency
                     );
 
+
                     if (button.dataset.addproducturl) {
                         $.post(
                             button.dataset.addproducturl,
@@ -45,8 +46,12 @@
                      */
                     session.onshippingcontactselected = function (e) {
                         console.log(e);
-                        $.get(
-                            button.dataset.getshippingsurl
+                        $.post(
+                            button.dataset.getshippingsurl,
+                            {
+                                countryCode: e.shippingContact.countryCode,
+                                postalCode: e.shippingContact.postalCode,
+                            }
                         ).done(function (data) {
                                 data = JSON.parse(data);
                                 session.completeShippingContactSelection(

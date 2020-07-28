@@ -36,6 +36,7 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
         $countries = $admin->sGetCountryList();
         $admin->sGetPremiumShippingcosts(reset($countries));
 
+        echo "";
         die();
     }
 
@@ -48,22 +49,47 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
 
         $cart = $applePay->getApplePayCart($this->basket);
 
+
+        $countryCode = $this->Request()->getParam('countryCode');
+        $postalCode = $this->Request()->getParam('postalCode');
+
+        $countries = $this->admin->sGetCountryList();
+
+        $foundCountry = null;
+
+        /** @var array $country */
+        foreach ($countries as $country) {
+
+            if (strtolower($country['iso']) === strtolower($countryCode)) {
+                $foundCountry = $country;
+                break;
+            }
+        }
+
+        $dispatchMethods = array();
+
+        if ($foundCountry !== null) {
+            $dispatchMethods = $this->admin->sGetPremiumDispatches($foundCountry['id']);
+        }
+
+
+        $shippingMethods = array();
+
+        /** @var array $method */
+        foreach ($dispatchMethods as $method) {
+
+            $shippingMethods[] = array(
+                'identifier' => $method['id'],
+                'label' => $method['name'],
+                'detail' => $method['description'],
+                'amount' => 0,
+            );
+        }
+
+
         $data = array(
             'cart' => $cart->toArray(),
-            'shippingmethods' => array(
-                array(
-                    'identifier' => 123,
-                    'label' => 'Standard Shipping',
-                    'detail' => '3-5 days',
-                    'amount' => 10.5,
-                ),
-                array(
-                    'identifier' => 555,
-                    'label' => 'Express Shipping',
-                    'detail' => '1.2 days',
-                    'amount' => 25.5,
-                ),
-            ),
+            'shippingmethods' => $shippingMethods,
         );
 
         echo json_encode($data);
