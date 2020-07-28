@@ -186,7 +186,7 @@ class FrontendViewSubscriber implements SubscriberInterface
     public function onCollectLess(Enlight_Event_EventArgs $args)
     {
         $lessFiles = [];
-        $lessFiles[] = __DIR__ . '/../Resources/views/frontend/_public/src/less/apple-pay-buttons.less';
+        $lessFiles[] = __DIR__ . '/../Resources/views/frontend/_public/src/less/applepay-buttons.less';
         $lessFiles[] = __DIR__ . '/../Resources/views/frontend/_public/src/less/checkout.less';
         $lessFiles[] = __DIR__ . '/../Resources/views/frontend/_public/src/less/components.less';
 
