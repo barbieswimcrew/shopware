@@ -72,7 +72,6 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
             $dispatchMethods = $this->admin->sGetPremiumDispatches($foundCountry['id']);
         }
 
-
         $shippingMethods = array();
 
         /** @var array $method */
