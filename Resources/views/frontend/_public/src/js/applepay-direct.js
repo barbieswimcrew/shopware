@@ -18,6 +18,7 @@
             button.style.display = 'inline-block';
 
             button.addEventListener('click', function (e) {
+
                 const session = createApplePaySession(
                     button.dataset.label,
                     button.dataset.amount,
@@ -25,16 +26,49 @@
                     button.dataset.currency
                 );
 
-                //   session.onpaymentmethodselected = function (e) {
-                //      console.log(e);
-                //   };
-
                 session.onshippingcontactselected = function (e) {
                     console.log(e);
+
+                    let shippingOptions = [
+                        {label: 'Standard Shipping', amount: 33, detail: '3-5 days', identifier: 'domestic_std'}, {label: 'Expedited Shipping', amount: 45, detail: '1-3 days', identifier: 'domestic_exp'}
+                    ];
+
+                    var newTotal = {type: 'final', label: '<?=PRODUCTION_DISPLAYNAME?>', amount: 23};
+                    var newLineItems = [{type: 'final', label: 'test', amount: 22}, {type: 'final', label: 'P&P', amount: 22}];
+
+                    session.completeShippingContactSelection(
+                        ApplePaySession.STATUS_SUCCESS,
+                        shippingOptions,
+                        newTotal,
+                        newLineItems
+                    );
                 };
 
                 session.onshippingmethodselected = function (e) {
                     console.log(e);
+
+                    let shippingOptions = [
+                        {label: 'Standard Shipping', amount: 33, detail: '3-5 days', identifier: 'domestic_std'}, {label: 'Expedited Shipping', amount: 45, detail: '1-3 days', identifier: 'domestic_exp'}
+                    ];
+
+
+                    var newTotal = {type: 'final', label: '<?=PRODUCTION_DISPLAYNAME?>', amount: 22};
+                    var newLineItems = [{type: 'final', label: 'test', amount: 22}, {type: 'final', label: 'P&P', amount: 22}];
+
+                    session.completeShippingContactSelection(
+                        ApplePaySession.STATUS_SUCCESS,
+                        shippingOptions,
+                        newTotal,
+                        newLineItems
+                    );
+                };
+
+                session.onpaymentmethodselected = function (e) {
+                    console.log(e);
+                    var newTotal = {type: 'final', label: '<?=PRODUCTION_DISPLAYNAME?>', amount: 23};
+                    var newLineItems = [{type: 'final', label: 'asdf', amount: 33}, {type: 'final', label: 'P&P', amount: 23}];
+
+                    session.completePaymentMethodSelection(newTotal, newLineItems);
                 };
 
                 session.oncancel = function () {
@@ -57,7 +91,7 @@
                         console.log('Apple Pay Error: ' + error);
                         session.abort();
                     });
-                }
+                };
 
                 session.onpaymentauthorized = function (e) {
                     console.log('Apple Pay: Authorized');
@@ -72,17 +106,26 @@
                         button.dataset.number,
                         button.dataset.qty
                     );
-                }
+                };
 
                 session.begin();
             });
         });
     });
 
+    /**
+     *
+     * @param label
+     * @param amount
+     * @param country
+     * @param currency
+     * @returns {ApplePaySession}
+     */
     function createApplePaySession(label, amount, country, currency) {
-        var request = {
+        const request = {
             countryCode: country,
             currencyCode: currency,
+            requiredShippingContactFields: ['postalAddress'],
             supportedNetworks: [
                 'amex',
                 'maestro',
@@ -90,7 +133,7 @@
                 'visa',
                 'vPay'
             ],
-            merchantCapabilities: ['supports3DS'],
+            merchantCapabilities: ['supports3DS', 'supportsEMV', 'supportsCredit', 'supportsDebit'],
             total: {
                 label: label,
                 amount: amount
@@ -117,10 +160,13 @@
         return new ApplePaySession(applePayApiVersion, request);
     }
 
+
     /**
      *
      * @param checkoutURL
      * @param paymentToken
+     * @param productNumber
+     * @param quantity
      */
     function createAddProductForm(checkoutURL, paymentToken, productNumber, quantity) {
 
@@ -152,9 +198,6 @@
         createField('__csrf_token', token).appendTo($form);
 
         $form.appendTo($('body'));
-
-        console.log('form created');
-
         $form.submit();
     }
 
