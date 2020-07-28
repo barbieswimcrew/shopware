@@ -120,6 +120,12 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
      */
     public function restoreCartAction()
     {
+        $basket = $this->basket;
+
+        $basket->sDeleteBasket();
+
+        echo "";
+        die();
     }
 
 
