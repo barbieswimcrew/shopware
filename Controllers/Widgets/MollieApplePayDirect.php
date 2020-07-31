@@ -102,6 +102,10 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
     {
         $shippingIdentifier = $this->Request()->getParam('identifier', '');
 
+
+        $this->basket->sSYSTEM->_GET['sAddPremium'] = $shippingIdentifier;
+        $this->basket->sInsertPremium();
+
         $applePay = new ApplePayDirect(Shopware()->Shop());
 
         $cart = $applePay->getApplePayCart($this->basket);
