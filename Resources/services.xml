@@ -77,6 +77,9 @@
             <argument type="service" id="models" />
         </service>
 
+        <service id="mollie_shopware.components.applepay_direct" class="MollieShopware\Components\ApplePayDirect\ApplePayDirect">
+        </service>
+
         <!-- Event Subscribers -->
         <service id="mollie_shopware.subscriber.frontend_view" class="MollieShopware\Subscriber\FrontendViewSubscriber">
             <tag name="shopware.event_subscriber" />

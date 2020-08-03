@@ -15,39 +15,31 @@ use Shopware\Models\Shop\Shop;
 /**
  * @copyright 2020 dasistweb GmbH (https://www.dasistweb.de)
  */
-class ApplePayDirect
+class ApplePayDirect implements ApplePayDirectInterface
 {
 
+    /**
+     *
+     */
     const APPLEPAY_DIRECT_NAME = 'mollie_' . PaymentMethod::APPLEPAY_DIRECT;
 
+    /**
+     *
+     */
     const KEY_MOLLIE_APPLEPAY_BUTTON = 'sMollieApplePayDirectButton';
 
 
     /**
-     * @var Shop
-     */
-    private $shop;
-
-
-    /**
-     * @param Shop $shop
-     */
-    public function __construct(Shop $shop)
-    {
-        $this->shop = $shop;
-    }
-
-
-    /**
      * @param \sBasket $basket
+     * @param Shop $shop
      * @return ApplePayCart
      * @throws \Enlight_Exception
      */
-    public function getApplePayCart(\sBasket $basket)
+    public function getApplePayCart(\sBasket $basket, Shop $shop)
     {
         $cart = new ApplePayCart(
             'DE', # todo country, von wo?
-            $this->shop->getCurrency()->getCurrency()
+            $shop->getCurrency()->getCurrency()
         );
 
         /** @var array $item */
@@ -62,7 +54,7 @@ class ApplePayDirect
 
         # if we are on PDP then our apple pay label and amount
         # is the one from our article
-        $cart->setLabel($this->shop->getName());
+        $cart->setLabel($shop->getName());
 
         return $cart;
     }
@@ -71,8 +63,9 @@ class ApplePayDirect
     /**
      * @param Enlight_Controller_Request_Request $request
      * @param Enlight_View $view
+     * @param Shop $shop
      */
-    public function addButtonStatus(Enlight_Controller_Request_Request $request, Enlight_View $view)
+    public function addButtonStatus(Enlight_Controller_Request_Request $request, Enlight_View $view, Shop $shop)
     {
         /** @var string $controller */
         $controller = $request->getControllerName();
@@ -82,7 +75,7 @@ class ApplePayDirect
         $button = new ApplePayButton(
             $this->isApplePayDirectAvailable(),
             $country,
-            $this->shop->getCurrency()->getCurrency()
+            $shop->getCurrency()->getCurrency()
         );
 
         switch (strtolower($controller)) {
@@ -106,6 +99,23 @@ class ApplePayDirect
         $responseString = $client->wallets->requestApplePayPaymentSession($domain, $validationUrl);
 
         return (string)$responseString;
+    }
+
+    /**
+     * @param $docRoot
+     * @return mixed|void
+     */
+    public function downloadDomainAssociationFile($docRoot)
+    {
+        $content = file_get_contents('https://www.mollie.com/.well-known/apple-developer-merchantid-domain-association');
+
+        $appleFolder = $docRoot . '/.well-known';
+
+        if (!file_exists($appleFolder)) {
+            mkdir($appleFolder);
+        }
+
+        file_put_contents($appleFolder . '/apple-developer-merchantid-domain-association', $content);
     }
 
     /**

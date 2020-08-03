@@ -7,6 +7,7 @@ use Enlight\Event\SubscriberInterface;
 use Enlight_Event_EventArgs;
 use Enlight_View;
 use MollieShopware\Components\ApplePayDirect\ApplePayDirect;
+use MollieShopware\Components\ApplePayDirect\ApplePayDirectInterface;
 use MollieShopware\Components\Constants\PaymentMethod;
 use Shopware\Components\Theme\LessDefinition;
 
@@ -70,8 +71,10 @@ class ApplePayDirectSubscriber implements SubscriberInterface
         # add the apple pay direct data for our current view.
         # the data depends on our page.
         # this might either be a product on PDP, or the full cart data
-        $applePay = new ApplePayDirect(Shopware()->Shop());
-        $applePay->addButtonStatus($request, $view);
+        /** @var ApplePayDirectInterface $applePay */
+        $applePay = Shopware()->Container()->get('mollie_shopware.components.applepay_direct');
+
+        $applePay->addButtonStatus($request, $view, Shopware()->Shop());
     }
 
     /**

@@ -3,6 +3,7 @@
 use Mollie\Api\Exceptions\ApiException;
 use Mollie\Api\MollieApiClient;
 use MollieShopware\Components\ApplePayDirect\ApplePayDirect;
+use MollieShopware\Components\ApplePayDirect\ApplePayDirectInterface;
 use MollieShopware\Components\Logger;
 
 /**
@@ -45,9 +46,10 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
      */
     public function getShippingsAction()
     {
-        $applePay = new ApplePayDirect(Shopware()->Shop());
+        /** @var ApplePayDirectInterface $applePay */
+        $applePay = Shopware()->Container()->get('mollie_shopware.components.applepay_direct');
 
-        $cart = $applePay->getApplePayCart($this->basket);
+        $cart = $applePay->getApplePayCart($this->basket, Shopware()->Shop());
 
 
         $countryCode = $this->Request()->getParam('countryCode');
@@ -106,9 +108,11 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
         $this->basket->sSYSTEM->_GET['sAddPremium'] = $shippingIdentifier;
         $this->basket->sInsertPremium();
 
-        $applePay = new ApplePayDirect(Shopware()->Shop());
 
-        $cart = $applePay->getApplePayCart($this->basket);
+        /** @var ApplePayDirectInterface $applePay */
+        $applePay = Shopware()->Container()->get('mollie_shopware.components.applepay_direct');
+
+        $cart = $applePay->getApplePayCart($this->basket, Shopware()->Shop());
 
         $data = array(
             'cart' => $cart->toArray(),
@@ -142,7 +146,8 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
 
         try {
 
-            $applePay = new ApplePayDirect(Shopware()->Shop());
+            /** @var ApplePayDirectInterface $applePay */
+            $applePay = Shopware()->Container()->get('mollie_shopware.components.applepay_direct');
 
             /** @var \Mollie\Api\MollieApiClient $mollieApi */
             $mollieApi = $this->getMollieApi();
