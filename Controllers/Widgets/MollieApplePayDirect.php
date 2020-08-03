@@ -49,7 +49,7 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
         /** @var ApplePayDirectInterface $applePay */
         $applePay = Shopware()->Container()->get('mollie_shopware.components.applepay_direct');
 
-        $cart = $applePay->getApplePayCart($this->basket, Shopware()->Shop());
+        $cart = $applePay->getApplePayCart($this->basket, $this->admin, Shopware()->Shop());
 
 
         $countryCode = $this->Request()->getParam('countryCode');
@@ -74,19 +74,34 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
             $dispatchMethods = $this->admin->sGetPremiumDispatches($foundCountry['id']);
         }
 
-        $shippingMethods = array();
+        $selectedMethod = array();
+        $otherMethods = array();
 
         /** @var array $method */
         foreach ($dispatchMethods as $method) {
 
-            $shippingMethods[] = array(
-                'identifier' => $method['id'],
-                'label' => $method['name'],
-                'detail' => $method['description'],
-                'amount' => 0,
-            );
+            if ($this->session['sDispatch'] === $method['id']) {
+                $selectedMethod = array(
+                    'identifier' => $method['id'],
+                    'label' => $method['name'],
+                    'detail' => $method['description'],
+                    'amount' => 0,
+                );
+            } else {
+                $otherMethods[] = array(
+                    'identifier' => $method['id'],
+                    'label' => $method['name'],
+                    'detail' => $method['description'],
+                    'amount' => 0,
+                );
+            }
+
         }
 
+        $shippingMethods = array();
+
+        $shippingMethods[] = $selectedMethod;
+        $shippingMethods = array_merge($shippingMethods, $otherMethods);
 
         $data = array(
             'cart' => $cart->toArray(),
@@ -104,15 +119,13 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
     {
         $shippingIdentifier = $this->Request()->getParam('identifier', '');
 
-
-        $this->basket->sSYSTEM->_GET['sAddPremium'] = $shippingIdentifier;
-        $this->basket->sInsertPremium();
+        $this->session['sDispatch'] = $shippingIdentifier;
 
 
         /** @var ApplePayDirectInterface $applePay */
         $applePay = Shopware()->Container()->get('mollie_shopware.components.applepay_direct');
 
-        $cart = $applePay->getApplePayCart($this->basket, Shopware()->Shop());
+        $cart = $applePay->getApplePayCart($this->basket, $this->admin, Shopware()->Shop());
 
         $data = array(
             'cart' => $cart->toArray(),

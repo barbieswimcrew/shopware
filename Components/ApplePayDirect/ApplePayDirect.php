@@ -5,7 +5,7 @@ namespace MollieShopware\Components\ApplePayDirect;
 use Enlight_Controller_Request_Request;
 use Enlight_View;
 use Mollie\Api\MollieApiClient;
-use MollieShopware\Components\ApplePayDirect\Models\ApplePayCart;
+use MollieShopware\Components\ApplePayDirect\Models\Cart\ApplePayCart;
 use MollieShopware\Components\ApplePayDirect\Models\ApplePayButton;
 use MollieShopware\Components\Constants\PaymentMethod;
 use MollieShopware\Components\Services\PaymentMethodService;
@@ -31,11 +31,12 @@ class ApplePayDirect implements ApplePayDirectInterface
 
     /**
      * @param \sBasket $basket
+     * @param \sAdmin $admin
      * @param Shop $shop
-     * @return ApplePayCart
+     * @return mixed|ApplePayCart
      * @throws \Enlight_Exception
      */
-    public function getApplePayCart(\sBasket $basket, Shop $shop)
+    public function getApplePayCart(\sBasket $basket, \sAdmin $admin, Shop $shop)
     {
         $cart = new ApplePayCart(
             'DE', # todo country, von wo?
@@ -51,6 +52,16 @@ class ApplePayDirect implements ApplePayDirectInterface
                 $item['price']
             );
         }
+
+        /** @var array $shipping */
+        $shipping = $admin->sGetPremiumShippingcosts();
+
+        $cart->addItem(
+            'SHIP1',
+            'Shipping',
+            1,
+            (float)$shipping['value']
+        );
 
         # if we are on PDP then our apple pay label and amount
         # is the one from our article
