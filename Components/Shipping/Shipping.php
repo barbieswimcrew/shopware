@@ -46,15 +46,31 @@ class Shipping
      */
     public function getShippingMethodCosts($country, $shippingMethodId)
     {
-        $previousDispatch = $this->session['sDispatch'];
+        $previousDispatch = $this->getCartShippingMethodID();
 
-        $this->session['sDispatch'] = $shippingMethodId;
+        $this->setCartShippingMethodID($shippingMethodId);
 
         $costs = $this->admin->sGetPremiumShippingcosts($country);
 
-        $this->session['sDispatch'] = $previousDispatch;
+        $this->setCartShippingMethodID($previousDispatch);
 
         return $costs['value'];
+    }
+
+    /**
+     * @param $shippingMethodId
+     */
+    public function setCartShippingMethodID($shippingMethodId)
+    {
+        $this->session['sDispatch'] = $shippingMethodId;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getCartShippingMethodID()
+    {
+        return $this->session['sDispatch'];
     }
 
 }

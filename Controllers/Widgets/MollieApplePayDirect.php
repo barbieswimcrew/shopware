@@ -18,7 +18,7 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
      * to the cart.
      * It will first create a snapshot (todo) of the current
      * cart, then it will delete it and only add our single product to it.
-     * 
+     *
      * @throws Enlight_Event_Exception
      * @throws Enlight_Exception
      * @throws Zend_Db_Adapter_Exception
@@ -57,11 +57,8 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
      */
     public function getShippingsAction()
     {
-        $shipping = new Shipping($this->admin, $this->session);
-
         /** @var ApplePayDirectInterface $applePay */
         $applePay = Shopware()->Container()->get('mollie_shopware.components.applepay_direct');
-
 
         $shippingMethods = array();
 
@@ -77,11 +74,12 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
 
             # get all available shipping methods
             # for apple pay direct and our selected country
+            $shipping = new Shipping($this->admin, $this->session);
             $dispatchMethods = $shipping->getShippingMethods($userCountry['id'], $applePayMethodId);
 
             # now build an apple pay conform array
             # of these shipping methods
-            $shippingMethods = $this->formatApplePayShippingMethods($dispatchMethods, $userCountry);
+            $shippingMethods = $this->formatApplePayShippingMethods($dispatchMethods, $userCountry, $shipping);
         }
 
         $data = array(
@@ -94,18 +92,22 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
     }
 
     /**
-     *
+     * This route sets the provided shipping method
+     * as the one that will be used for the cart.
+     * It then returns the cart as JSON along
+     * with the used shipping identifier.
      */
     public function setShippingAction()
     {
         $shippingIdentifier = $this->Request()->getParam('identifier', '');
 
-        $this->session['sDispatch'] = $shippingIdentifier;
-
-        $cart = $this->getCart();
+        if (!empty($shippingIdentifier)) {
+            $shipping = new Shipping($this->admin, $this->session);
+            $shipping->setCartShippingMethodID($shippingIdentifier);
+        }
 
         $data = array(
-            'cart' => $cart->toArray(),
+            'cart' => $this->getCart()->toArray(),
             'id' => $shippingIdentifier,
         );
 
@@ -114,7 +116,9 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
     }
 
     /**
-     *
+     * This route restores the cart and
+     * adds all items again that where previously
+     * added before starting Apple Pay.
      */
     public function restoreCartAction()
     {
@@ -126,18 +130,24 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
         die();
     }
 
-
     /**
+     * This route starts a new merchant validation that
+     * is required to start an apple pay session checkout.
+     * It will use Mollie as proxy to talk to Apple.
+     * The resulting session data must then be output
+     * exactly as it has been received.
+     *
+     * @return mixed
      * @throws Exception
      */
     public function createPaymentSessionAction()
     {
         Shopware()->Plugins()->Controller()->ViewRenderer()->setNoRender();
 
-        try {
+        /** @var ApplePayDirectInterface $applePay */
+        $applePay = Shopware()->Container()->get('mollie_shopware.components.applepay_direct');
 
-            /** @var ApplePayDirectInterface $applePay */
-            $applePay = Shopware()->Container()->get('mollie_shopware.components.applepay_direct');
+        try {
 
             /** @var \Mollie\Api\MollieApiClient $mollieApi */
             $mollieApi = $this->getMollieApi();
@@ -145,9 +155,11 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
             $domain = Shopware()->Shop()->getHost();
             $validationUrl = (string)$this->Request()->getParam('validationUrl');
 
-            $response = $applePay->requestPaymentSession($mollieApi, $domain, $validationUrl);
-
-            echo $response;
+            return $applePay->requestPaymentSession(
+                $mollieApi,
+                $domain,
+                $validationUrl
+            );
 
         } catch (Exception $ex) {
 
@@ -158,9 +170,12 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
         }
     }
 
-
     /**
+     * This route is the last part of processing an apple pay direct payment.
+     * It will receive the payment token from the client
+     * and continue with the server side checkout process.
      *
+     * @throws Exception
      */
     public function createPaymentAction()
     {
@@ -198,6 +213,9 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
         return $apiClient;
     }
 
+    /**
+     * @return mixed
+     */
     private function getCart()
     {
         /** @var ApplePayDirectInterface $applePay */
@@ -206,7 +224,7 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
         $cart = $applePay->getApplePayCart(
             $this->basket, $this->admin,
             Shopware()->Shop(),
-            $this->getCountry('DE')
+            $this->getCountry('DE') # todo
         );
 
         return $cart;
@@ -238,15 +256,12 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
      * @param $userCountry
      * @return array
      */
-    private function formatApplePayShippingMethods(array $dispatchMethods, $userCountry)
+    private function formatApplePayShippingMethods(array $dispatchMethods, $userCountry, Shipping $shipping)
     {
-        $shipping = new Shipping($this->admin, $this->session);
-
-
         $selectedMethod = null;
         $otherMethods = array();
 
-        $selectedMethodID = $this->session['sDispatch'];
+        $selectedMethodID = $shipping->getCartShippingMethodID();
 
         /** @var array $method */
         foreach ($dispatchMethods as $method) {
@@ -275,7 +290,7 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
         } else {
             # set first one as default
             foreach ($otherMethods as $method) {
-                $this->session['sDispatch'] = $method['identifier'];
+                $shipping->setCartShippingMethodID($method['identifier']);
                 break;
             }
         }
@@ -286,4 +301,5 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
 
         return $shippingMethods;
     }
+
 }
