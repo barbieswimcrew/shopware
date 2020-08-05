@@ -49,9 +49,7 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
         /** @var ApplePayDirectInterface $applePay */
         $applePay = Shopware()->Container()->get('mollie_shopware.components.applepay_direct');
 
-
-        $countryCode = 'DE'; //$this->Request()->getParam('countryCode');
-
+        $countryCode = $this->Request()->getParam('countryCode');
 
         $foundCountry = null;
 
@@ -76,42 +74,28 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
         $selectedMethod = null;
         $otherMethods = array();
 
+
         $selectedMethodID = $this->session['sDispatch'];
 
         /** @var array $method */
         foreach ($dispatchMethods as $method) {
-            $this->session['sDispatch'] = $method['id'];
-
-            $costs = $this->admin->sGetPremiumShippingcosts($foundCountry);
-
-            if ($this->session['sDispatch'] === $method['id']) {
+            if ($selectedMethodID === $method['id']) {
                 $selectedMethod = array(
                     'identifier' => $method['id'],
                     'label' => $method['name'],
                     'detail' => $method['description'],
-                    'amount' => $costs['value'],
+                    'amount' => $this->getShippingMethodCosts($foundCountry, $method['id'])
                 );
-            }
-        }
-
-        /** @var array $method */
-        foreach ($dispatchMethods as $method) {
-            $this->session['sDispatch'] = $method['id'];
-
-            $costs = $this->admin->sGetPremiumShippingcosts($foundCountry);
-
-            if ((int)$selectedMethod['identifier'] !== (int)$method['id']) {
+            } else {
                 $otherMethods[] = array(
                     'identifier' => $method['id'],
                     'label' => $method['name'],
                     'detail' => $method['description'],
-                    'amount' => $costs['value'],
+                    'amount' => $this->getShippingMethodCosts($foundCountry, $method['id'])
                 );
             }
-
         }
 
-        $this->session['sDispatch'] = $selectedMethodID;
 
         $shippingMethods = array();
 
@@ -148,8 +132,7 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
         $shippingIdentifier = $this->Request()->getParam('identifier', '');
 
         $this->session['sDispatch'] = $shippingIdentifier;
-
-
+        
         $cart = $this->getCart();
 
         $data = array(
@@ -279,6 +262,24 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
         }
 
         return $foundCountry;
+    }
+
+    /**
+     * @param $country
+     * @param $shippingMethodId
+     * @return array|int|int[]|mixed
+     */
+    private function getShippingMethodCosts($country, $shippingMethodId)
+    {
+        $previousDispatch = $this->session['sDispatch'];
+
+        $this->session['sDispatch'] = $shippingMethodId;
+
+        $costs = $this->admin->sGetPremiumShippingcosts($country);
+
+        $this->session['sDispatch'] = $previousDispatch;
+
+        return $costs['value'];
     }
 
 }
