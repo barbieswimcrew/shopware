@@ -5,6 +5,7 @@ use Mollie\Api\MollieApiClient;
 use MollieShopware\Components\ApplePayDirect\ApplePayDirect;
 use MollieShopware\Components\ApplePayDirect\ApplePayDirectInterface;
 use MollieShopware\Components\Logger;
+use MollieShopware\Components\Shipping\Shipping;
 
 /**
  * @copyright 2020 dasistweb GmbH (https://www.dasistweb.de)
@@ -46,34 +47,26 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
      */
     public function getShippingsAction()
     {
+        $shipping = new Shipping($this->admin, $this->session);
+
         /** @var ApplePayDirectInterface $applePay */
         $applePay = Shopware()->Container()->get('mollie_shopware.components.applepay_direct');
 
         $countryCode = $this->Request()->getParam('countryCode');
 
-        $foundCountry = null;
 
-        $countries = $this->admin->sGetCountryList();
+        $userCountry = $this->getCountry($countryCode);
 
-        /** @var array $country */
-        foreach ($countries as $country) {
-            if (strtolower($country['iso']) === strtolower($countryCode)) {
-                $foundCountry = $country;
-                break;
-            }
-        }
-
-        $paymentID = $applePay->getPaymentMethodID($this->admin);
+        $applePayMethodId = $applePay->getPaymentMethodID($this->admin);
 
         $dispatchMethods = array();
 
-        if ($foundCountry !== null) {
-            $dispatchMethods = $this->admin->sGetPremiumDispatches($foundCountry['id'], $paymentID);
+        if ($userCountry !== null) {
+            $dispatchMethods = $shipping->getShippingMethods($userCountry['id'], $applePayMethodId);
         }
 
         $selectedMethod = null;
         $otherMethods = array();
-
 
         $selectedMethodID = $this->session['sDispatch'];
 
@@ -84,14 +77,14 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
                     'identifier' => $method['id'],
                     'label' => $method['name'],
                     'detail' => $method['description'],
-                    'amount' => $this->getShippingMethodCosts($foundCountry, $method['id'])
+                    'amount' => $shipping->getShippingMethodCosts($userCountry, $method['id'])
                 );
             } else {
                 $otherMethods[] = array(
                     'identifier' => $method['id'],
                     'label' => $method['name'],
                     'detail' => $method['description'],
-                    'amount' => $this->getShippingMethodCosts($foundCountry, $method['id'])
+                    'amount' => $shipping->getShippingMethodCosts($userCountry, $method['id'])
                 );
             }
         }
@@ -132,7 +125,7 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
         $shippingIdentifier = $this->Request()->getParam('identifier', '');
 
         $this->session['sDispatch'] = $shippingIdentifier;
-        
+
         $cart = $this->getCart();
 
         $data = array(
@@ -262,24 +255,6 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
         }
 
         return $foundCountry;
-    }
-
-    /**
-     * @param $country
-     * @param $shippingMethodId
-     * @return array|int|int[]|mixed
-     */
-    private function getShippingMethodCosts($country, $shippingMethodId)
-    {
-        $previousDispatch = $this->session['sDispatch'];
-
-        $this->session['sDispatch'] = $shippingMethodId;
-
-        $costs = $this->admin->sGetPremiumShippingcosts($country);
-
-        $this->session['sDispatch'] = $previousDispatch;
-
-        return $costs['value'];
     }
 
 }
