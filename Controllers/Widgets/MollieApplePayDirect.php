@@ -181,6 +181,22 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
      */
     public function createPaymentAction()
     {
+        $email = '';
+        $payerId = '';
+        $salutation = 'mr';
+        $firstname = '';
+        $lastname = '';
+        $street = '';
+        $streetnumber = '';
+        $zipcode = '';
+        $city = '';
+        $countryID = 0;
+        $stateID = 0;
+        $customerType = 'private'; // or 'business
+        $company = '';
+        $department = '';
+        $phone = '';
+        
         $this->redirect('/checkout/confirm');
     }
 
