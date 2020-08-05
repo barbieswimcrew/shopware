@@ -151,6 +151,10 @@ class PaymentMethodService
                 $method[self::PAYMENT_METHOD_DESCRIPTION] = (string)$existingMethod->getDescription();
                 $method[self::PAYMENT_METHOD_POSITION] = $existingMethod->getPosition();
                 $method[self::PAYMENT_METHOD_SURCHARGE] = $existingMethod->getSurcharge();
+            } else {
+                // make sure new payment methods are not accidentally activated
+                // when being installed
+                $method[self::PAYMENT_METHOD_ACTIVE] = 0;
             }
 
             // Install the payment method in Shopware

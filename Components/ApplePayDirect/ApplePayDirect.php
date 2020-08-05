@@ -21,30 +21,26 @@ class ApplePayDirect implements ApplePayDirectInterface
     /**
      *
      */
-    const APPLEPAY_DIRECT_NAME = 'mollie_' . PaymentMethod::APPLEPAY_DIRECT;
-
-    /**
-     *
-     */
     const KEY_MOLLIE_APPLEPAY_BUTTON = 'sMollieApplePayDirectButton';
 
 
     /**
-     * @param \sBasket $basket
-     * @param \sAdmin $admin
      * @param Shop $shop
+     * @param \sAdmin $country
      * @return mixed|ApplePayCart
-     * @throws \Enlight_Exception
      */
-    public function getApplePayCart(\sBasket $basket, \sAdmin $admin, Shop $shop)
+    public function getApplePayCart(Shop $shop, $country)
     {
+        $sBasket = Shopware()->Modules()->Basket();
+        $sAdmin = Shopware()->Modules()->Admin();
+
         $cart = new ApplePayCart(
             'DE', # todo country, von wo?
             $shop->getCurrency()->getCurrency()
         );
 
         /** @var array $item */
-        foreach ($basket->sGetBasketData()['content'] as $item) {
+        foreach ($sBasket->sGetBasketData()['content'] as $item) {
             $cart->addItem(
                 $item['ordernumber'],
                 $item['articlename'],
@@ -54,14 +50,17 @@ class ApplePayDirect implements ApplePayDirectInterface
         }
 
         /** @var array $shipping */
-        $shipping = $admin->sGetPremiumShippingcosts();
+        $shipping = $sAdmin->sGetPremiumShippingcosts($country);
 
-        $cart->addItem(
-            'SHIP1',
-            'Shipping',
-            1,
-            (float)$shipping['value']
-        );
+        if ($shipping['value'] > 0) {
+            $cart->addItem(
+                'SHIP1',
+                'Shipping',
+                1,
+                (float)$shipping['value']
+            );
+        }
+
 
         # if we are on PDP then our apple pay label and amount
         # is the one from our article
@@ -130,6 +129,25 @@ class ApplePayDirect implements ApplePayDirectInterface
     }
 
     /**
+     * @param \sAdmin $admin
+     * @return int|string
+     * @throws \Exception
+     */
+    public function getPaymentMethodID(\sAdmin $admin)
+    {
+        $means = $admin->sGetPaymentMeans();
+
+        foreach ($means as $paymentID => $payment) {
+
+            if ($payment['name'] === ApplePayDirectInterface::APPLEPAY_DIRECT_NAME) {
+                return $paymentID;
+            }
+        }
+
+        throw new \Exception('Apple Pay Direct Payment not found');
+    }
+
+    /**
      * @return bool
      */
     private function isApplePayDirectAvailable(): bool
@@ -139,7 +157,7 @@ class ApplePayDirect implements ApplePayDirectInterface
 
         $applePayDirect = $paymentMethodService->getPaymentMethod(
             [
-                'name' => self::APPLEPAY_DIRECT_NAME,
+                'name' => ApplePayDirectInterface::APPLEPAY_DIRECT_NAME,
                 'active' => true,
             ]
         );

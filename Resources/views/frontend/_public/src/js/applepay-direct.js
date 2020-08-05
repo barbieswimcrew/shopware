@@ -45,7 +45,6 @@
                      * @param e
                      */
                     session.onshippingcontactselected = function (e) {
-                        console.log(e);
                         $.post(
                             button.dataset.getshippingsurl,
                             {
@@ -69,8 +68,6 @@
                      * @param e
                      */
                     session.onshippingmethodselected = function (e) {
-                        console.log(e);
-
                         $.post(
                             button.dataset.setshippingurl,
                             {
@@ -101,7 +98,6 @@
                      * @param e
                      */
                     session.onvalidatemerchant = function (e) {
-                        console.log('Apple Pay: Validating Merchant Session');
                         $.post(
                             button.dataset.validationurl,
                             {
@@ -110,7 +106,6 @@
                         ).done(function (validationData) {
                                 validationData = JSON.parse(validationData);
                                 session.completeMerchantValidation(validationData);
-                                console.log('verified');
                             }
                         ).fail(function (xhr, status, error) {
                             console.log('Apple Pay Error: ' + error);
@@ -124,10 +119,11 @@
                      */
                     session.onpaymentauthorized = function (e) {
                         console.log('Apple Pay: Authorized');
+                        console.log(e);
                         let paymentToken = e.payment.token;
                         paymentToken = JSON.stringify(paymentToken);
 
-                        console.log('Apple Pay Token: ' + paymentToken);
+                        finishPayment(button.dataset.checkouturl, paymentToken, e.payment);
                     };
 
                     session.begin();
@@ -147,7 +143,12 @@
             const request = {
                 countryCode: country,
                 currencyCode: currency,
-                requiredShippingContactFields: ['postalAddress'],
+                requiredShippingContactFields: [
+                    "postalAddress",
+                    "name",
+                    "phone",
+                    "email"
+                ],
                 supportedNetworks: [
                     'amex',
                     'maestro',
@@ -163,6 +164,37 @@
             };
 
             return new ApplePaySession(applePayApiVersion, request);
+        }
+
+        /**
+         *
+         * @param checkoutURL
+         * @param paymentToken
+         * @param payment
+         */
+        function finishPayment(checkoutURL, paymentToken, payment) {
+            var me = this,
+                $form,
+                createField = function (name, val) {
+                    return $('<input>', {
+                        type: 'hidden',
+                        name: name,
+                        value: val
+                    });
+                };
+
+            $form = $('<form>', {
+                action: checkoutURL,
+                method: 'POST'
+            });
+
+            createField('paymentToken', paymentToken).appendTo($form);
+            createField('street', payment.shippingContact.addressLines[0]).appendTo($form);
+            createField('postalCode', payment.shippingContact.postalCode).appendTo($form);
+
+            $form.appendTo($('body'));
+
+            $form.submit();
         }
 
     }
