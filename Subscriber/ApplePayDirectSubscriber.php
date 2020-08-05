@@ -14,8 +14,6 @@ use Shopware\Components\Theme\LessDefinition;
 class ApplePayDirectSubscriber implements SubscriberInterface
 {
 
-    const APPLEPAY_DIRECT_NAME = 'mollie_' . PaymentMethod::APPLEPAY_DIRECT;
-
     public static function getSubscribedEvents()
     {
         return [
@@ -103,7 +101,7 @@ class ApplePayDirectSubscriber implements SubscriberInterface
     private function removeApplePayDirectFromPaymentMeans(array &$sPayments)
     {
         foreach ($sPayments as $index => $payment) {
-            if ($payment['name'] === self::APPLEPAY_DIRECT_NAME) {
+            if ($payment['name'] === ApplePayDirectInterface::APPLEPAY_DIRECT_NAME) {
                 unset($sPayments[$index]);
                 break;
             }

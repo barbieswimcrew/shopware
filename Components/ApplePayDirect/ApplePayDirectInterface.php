@@ -5,6 +5,7 @@ namespace MollieShopware\Components\ApplePayDirect;
 use Enlight_Controller_Request_Request;
 use Enlight_View;
 use Mollie\Api\MollieApiClient;
+use MollieShopware\Components\Constants\PaymentMethod;
 use Shopware\Models\Shop\Shop;
 
 /**
@@ -12,6 +13,11 @@ use Shopware\Models\Shop\Shop;
  */
 interface ApplePayDirectInterface
 {
+
+    /**
+     *
+     */
+    const APPLEPAY_DIRECT_NAME = 'mollie_' . PaymentMethod::APPLEPAY_DIRECT;
 
     /**
      * @param \sBasket $basket
@@ -41,5 +47,11 @@ interface ApplePayDirectInterface
      * @return mixed
      */
     public function downloadDomainAssociationFile($docRoot);
+
+    /**
+     * @param \sAdmin $admin
+     * @return mixed
+     */
+    public function getPaymentMethodID(\sAdmin $admin);
 
 }

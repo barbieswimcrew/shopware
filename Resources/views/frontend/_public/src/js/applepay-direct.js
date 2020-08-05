@@ -147,7 +147,12 @@
             const request = {
                 countryCode: country,
                 currencyCode: currency,
-                requiredShippingContactFields: ['postalAddress'],
+                requiredShippingContactFields: [
+                    "postalAddress",
+                    "name",
+                    "phone",
+                    "email"
+                ],
                 supportedNetworks: [
                     'amex',
                     'maestro',
