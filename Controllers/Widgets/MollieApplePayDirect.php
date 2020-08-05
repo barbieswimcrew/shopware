@@ -50,7 +50,6 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
         $applePay = Shopware()->Container()->get('mollie_shopware.components.applepay_direct');
 
 
-
         $countryCode = 'DE'; //$this->Request()->getParam('countryCode');
 
 
@@ -71,49 +70,66 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
         $dispatchMethods = array();
 
         if ($foundCountry !== null) {
-            # todo das muss noch gscheid gehn
             $dispatchMethods = $this->admin->sGetPremiumDispatches($foundCountry['id'], $paymentID);
         }
 
         $selectedMethod = null;
         $otherMethods = array();
 
+        $selectedMethodID = $this->session['sDispatch'];
+
         /** @var array $method */
         foreach ($dispatchMethods as $method) {
+            $this->session['sDispatch'] = $method['id'];
+
+            $costs = $this->admin->sGetPremiumShippingcosts($foundCountry);
 
             if ($this->session['sDispatch'] === $method['id']) {
                 $selectedMethod = array(
                     'identifier' => $method['id'],
                     'label' => $method['name'],
                     'detail' => $method['description'],
-                    'amount' => 220,
+                    'amount' => $costs['value'],
                 );
-            } else {
+            }
+        }
+
+        /** @var array $method */
+        foreach ($dispatchMethods as $method) {
+            $this->session['sDispatch'] = $method['id'];
+
+            $costs = $this->admin->sGetPremiumShippingcosts($foundCountry);
+
+            if ((int)$selectedMethod['identifier'] !== (int)$method['id']) {
                 $otherMethods[] = array(
                     'identifier' => $method['id'],
                     'label' => $method['name'],
                     'detail' => $method['description'],
-                    'amount' => 225,
+                    'amount' => $costs['value'],
                 );
             }
 
         }
 
+        $this->session['sDispatch'] = $selectedMethodID;
+
         $shippingMethods = array();
 
         if ($selectedMethod !== null) {
             $shippingMethods[] = $selectedMethod;
-
-            $this->session['sDispatch'] = $selectedMethod['identifier'];
-
-
+        } else {
+            # set first one as default
+            foreach ($otherMethods as $method) {
+                $this->session['sDispatch'] = $method['identifier'];
+                break;
+            }
         }
 
         foreach ($otherMethods as $method) {
             $shippingMethods[] = $method;
         }
 
-        $cart = $applePay->getApplePayCart($this->basket, $this->admin, Shopware()->Shop());
+        $cart = $this->getCart();
 
         $data = array(
             'cart' => $cart->toArray(),
@@ -134,10 +150,7 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
         $this->session['sDispatch'] = $shippingIdentifier;
 
 
-        /** @var ApplePayDirectInterface $applePay */
-        $applePay = Shopware()->Container()->get('mollie_shopware.components.applepay_direct');
-
-        $cart = $applePay->getApplePayCart($this->basket, $this->admin, Shopware()->Shop());
+        $cart = $this->getCart();
 
         $data = array(
             'cart' => $cart->toArray(),
@@ -231,6 +244,41 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
         }
 
         return $apiClient;
+    }
+
+    private function getCart()
+    {
+        /** @var ApplePayDirectInterface $applePay */
+        $applePay = Shopware()->Container()->get('mollie_shopware.components.applepay_direct');
+
+        $cart = $applePay->getApplePayCart(
+            $this->basket, $this->admin,
+            Shopware()->Shop(),
+            $this->getCountry('DE')
+        );
+
+        return $cart;
+    }
+
+    /**
+     * @param $countryCode
+     * @return array|null
+     */
+    private function getCountry($countryCode)
+    {
+        $countries = $this->admin->sGetCountryList();
+
+        $foundCountry = null;
+
+        /** @var array $country */
+        foreach ($countries as $country) {
+            if (strtolower($country['iso']) === strtolower($countryCode)) {
+                $foundCountry = $country;
+                break;
+            }
+        }
+
+        return $foundCountry;
     }
 
 }

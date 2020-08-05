@@ -31,7 +31,7 @@ class ApplePayDirect implements ApplePayDirectInterface
      * @return mixed|ApplePayCart
      * @throws \Enlight_Exception
      */
-    public function getApplePayCart(\sBasket $basket, \sAdmin $admin, Shop $shop)
+    public function getApplePayCart(\sBasket $basket, \sAdmin $admin, Shop $shop, $country)
     {
         $cart = new ApplePayCart(
             'DE', # todo country, von wo?
@@ -49,7 +49,7 @@ class ApplePayDirect implements ApplePayDirectInterface
         }
 
         /** @var array $shipping */
-        $shipping = $admin->sGetPremiumShippingcosts();
+        $shipping = $admin->sGetPremiumShippingcosts($country);
 
         if ($shipping['value'] > 0) {
             $cart->addItem(
