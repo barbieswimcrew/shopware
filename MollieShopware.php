@@ -35,7 +35,7 @@ class MollieShopware extends Plugin
         return [
             'Enlight_Controller_Front_StartDispatch' => 'requireDependencies',
             'Enlight_Controller_Action_PostDispatchSecure_Backend_Order' => 'onOrderPostDispatch',
-            'Enlight_Controller_Front_RouteStartup' => [ 'fixLanguageShopPush', -10 ],
+            'Enlight_Controller_Front_RouteStartup' => ['fixLanguageShopPush', -10],
         ];
     }
 
@@ -261,8 +261,7 @@ class MollieShopware extends Plugin
                 TransactionItem::class,
                 OrderLines::class
             ]);
-        }
-        catch (Exception $ex) {
+        } catch (Exception $ex) {
             Logger::log(
                 'error',
                 $ex->getMessage(),
@@ -281,8 +280,7 @@ class MollieShopware extends Plugin
             $schema->remove(Transaction::class);
             $schema->remove(TransactionItem::class);
             $schema->remove(OrderLines::class);
-        }
-        catch (Exception $ex) {
+        } catch (Exception $ex) {
             Logger::log(
                 'error',
                 $ex->getMessage(),
@@ -309,15 +307,13 @@ class MollieShopware extends Plugin
     {
         try {
             $this->makeAttributes()->create([['s_user_attributes', 'mollie_shopware_ideal_issuer', 'string', []]]);
-        }
-        catch (Exception $ex) {
+        } catch (Exception $ex) {
             //
         }
 
         try {
             $this->makeAttributes()->create([['s_user_attributes', 'mollie_shopware_credit_card_token', 'string', []]]);
-        }
-        catch (Exception $ex) {
+        } catch (Exception $ex) {
             //
         }
     }
@@ -329,15 +325,13 @@ class MollieShopware extends Plugin
     {
         try {
             $this->makeAttributes()->remove([['s_user_attributes', 'mollie_shopware_ideal_issuer']]);
-        }
-        catch (Exception $ex) {
+        } catch (Exception $ex) {
             //
         }
 
         try {
             $this->makeAttributes()->remove([['s_user_attributes', 'mollie_shopware_credit_card_token']]);
-        }
-        catch (Exception $ex) {
+        } catch (Exception $ex) {
             //
         }
     }
@@ -370,8 +364,7 @@ class MollieShopware extends Plugin
                     $shop
                 );
             }
-        }
-        catch (Exception $ex) {
+        } catch (Exception $ex) {
             //
         }
     }

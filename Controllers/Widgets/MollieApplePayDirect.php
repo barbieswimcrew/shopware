@@ -144,10 +144,10 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
     {
         Shopware()->Plugins()->Controller()->ViewRenderer()->setNoRender();
 
-        /** @var ApplePayDirectInterface $applePay */
-        $applePay = Shopware()->Container()->get('mollie_shopware.components.applepay_direct');
-
         try {
+
+            /** @var ApplePayDirectInterface $applePay */
+            $applePay = Shopware()->Container()->get('mollie_shopware.components.applepay_direct');
 
             /** @var \Mollie\Api\MollieApiClient $mollieApi */
             $mollieApi = $this->getMollieApi();
@@ -155,11 +155,13 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
             $domain = Shopware()->Shop()->getHost();
             $validationUrl = (string)$this->Request()->getParam('validationUrl');
 
-            return $applePay->requestPaymentSession(
+            $response = $applePay->requestPaymentSession(
                 $mollieApi,
                 $domain,
                 $validationUrl
             );
+
+            echo $response;
 
         } catch (Exception $ex) {
 
@@ -222,7 +224,6 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
         $applePay = Shopware()->Container()->get('mollie_shopware.components.applepay_direct');
 
         $cart = $applePay->getApplePayCart(
-            $this->basket, $this->admin,
             Shopware()->Shop(),
             $this->getCountry('DE') # todo
         );

@@ -45,7 +45,6 @@
                      * @param e
                      */
                     session.onshippingcontactselected = function (e) {
-                        console.log(e);
                         $.post(
                             button.dataset.getshippingsurl,
                             {
@@ -69,8 +68,6 @@
                      * @param e
                      */
                     session.onshippingmethodselected = function (e) {
-                        console.log(e);
-
                         $.post(
                             button.dataset.setshippingurl,
                             {
@@ -101,7 +98,6 @@
                      * @param e
                      */
                     session.onvalidatemerchant = function (e) {
-                        console.log('Apple Pay: Validating Merchant Session');
                         $.post(
                             button.dataset.validationurl,
                             {
@@ -110,7 +106,6 @@
                         ).done(function (validationData) {
                                 validationData = JSON.parse(validationData);
                                 session.completeMerchantValidation(validationData);
-                                console.log('verified');
                             }
                         ).fail(function (xhr, status, error) {
                             console.log('Apple Pay Error: ' + error);

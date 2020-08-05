@@ -20,11 +20,11 @@ interface ApplePayDirectInterface
     const APPLEPAY_DIRECT_NAME = 'mollie_' . PaymentMethod::APPLEPAY_DIRECT;
 
     /**
-     * @param \sBasket $basket
      * @param Shop $shop
+     * @param $country
      * @return mixed
      */
-    public function getApplePayCart(\sBasket $basket, \sAdmin $admin, Shop $shop, $country);
+    public function getApplePayCart(Shop $shop, $country);
 
     /**
      * @param Enlight_Controller_Request_Request $request

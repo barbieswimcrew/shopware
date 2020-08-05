@@ -23,15 +23,32 @@ class ApplePayDirect implements ApplePayDirectInterface
      */
     const KEY_MOLLIE_APPLEPAY_BUTTON = 'sMollieApplePayDirectButton';
 
+    /**
+     * @var $sBasket
+     */
+    private $sBasket;
 
     /**
-     * @param \sBasket $basket
-     * @param \sAdmin $admin
-     * @param Shop $shop
-     * @return mixed|ApplePayCart
-     * @throws \Enlight_Exception
+     * @var $sAdmin
      */
-    public function getApplePayCart(\sBasket $basket, \sAdmin $admin, Shop $shop, $country)
+    private $sAdmin;
+
+
+    /**
+     */
+    public function __construct()
+    {
+        $this->sBasket = Shopware()->Modules()->Basket();
+        $this->sAdmin = Shopware()->Modules()->Admin();
+    }
+
+
+    /**
+     * @param Shop $shop
+     * @param \sAdmin $country
+     * @return mixed|ApplePayCart
+     */
+    public function getApplePayCart(Shop $shop, $country)
     {
         $cart = new ApplePayCart(
             'DE', # todo country, von wo?
@@ -39,7 +56,7 @@ class ApplePayDirect implements ApplePayDirectInterface
         );
 
         /** @var array $item */
-        foreach ($basket->sGetBasketData()['content'] as $item) {
+        foreach ($this->sBasket->sGetBasketData()['content'] as $item) {
             $cart->addItem(
                 $item['ordernumber'],
                 $item['articlename'],
@@ -49,7 +66,7 @@ class ApplePayDirect implements ApplePayDirectInterface
         }
 
         /** @var array $shipping */
-        $shipping = $admin->sGetPremiumShippingcosts($country);
+        $shipping = $this->sAdmin->sGetPremiumShippingcosts($country);
 
         if ($shipping['value'] > 0) {
             $cart->addItem(
