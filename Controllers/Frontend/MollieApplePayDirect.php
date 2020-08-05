@@ -6,12 +6,23 @@ use MollieShopware\Components\ApplePayDirect\ApplePayDirect;
 use MollieShopware\Components\ApplePayDirect\ApplePayDirectInterface;
 use MollieShopware\Components\Logger;
 use MollieShopware\Components\Shipping\Shipping;
+use Shopware\Components\CSRFWhitelistAware;
 
 /**
  * @copyright 2020 dasistweb GmbH (https://www.dasistweb.de)
  */
-class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Controllers_Frontend_Checkout
+class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Controllers_Frontend_Checkout implements CSRFWhitelistAware
 {
+
+    /**
+     * @return string[]
+     */
+    public function getWhitelistedCSRFActions()
+    {
+        return [
+            'createPayment' # todo, vl nicht so gut ha :D
+        ];
+    }
 
     /**
      * This route adds the provided article
@@ -181,14 +192,16 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
      */
     public function createPaymentAction()
     {
+        $paymentToken = $this->Request()->getParam('paymentToken', '');
+
         $email = '';
         $payerId = '';
         $salutation = 'mr';
         $firstname = '';
         $lastname = '';
-        $street = '';
+        $street = $this->Request()->getParam('street', '');
         $streetnumber = '';
-        $zipcode = '';
+        $zipcode = $this->Request()->getParam('postalCode', '');
         $city = '';
         $countryID = 0;
         $stateID = 0;
@@ -196,8 +209,12 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
         $company = '';
         $department = '';
         $phone = '';
+
+        var_dump($paymentToken);
+        var_dump($street);
+        var_dump($zipcode);
         
-        $this->redirect('/checkout/confirm');
+        die('Finishing Apple Pay Payment');
     }
 
     /**

@@ -119,10 +119,11 @@
                      */
                     session.onpaymentauthorized = function (e) {
                         console.log('Apple Pay: Authorized');
+                        console.log(e);
                         let paymentToken = e.payment.token;
                         paymentToken = JSON.stringify(paymentToken);
 
-                        console.log('Apple Pay Token: ' + paymentToken);
+                        finishPayment(button.dataset.checkouturl, paymentToken, e.payment);
                     };
 
                     session.begin();
@@ -163,6 +164,37 @@
             };
 
             return new ApplePaySession(applePayApiVersion, request);
+        }
+
+        /**
+         *
+         * @param checkoutURL
+         * @param paymentToken
+         * @param payment
+         */
+        function finishPayment(checkoutURL, paymentToken, payment) {
+            var me = this,
+                $form,
+                createField = function (name, val) {
+                    return $('<input>', {
+                        type: 'hidden',
+                        name: name,
+                        value: val
+                    });
+                };
+
+            $form = $('<form>', {
+                action: checkoutURL,
+                method: 'POST'
+            });
+
+            createField('paymentToken', paymentToken).appendTo($form);
+            createField('street', payment.shippingContact.addressLines[0]).appendTo($form);
+            createField('postalCode', payment.shippingContact.postalCode).appendTo($form);
+
+            $form.appendTo($('body'));
+
+            $form.submit();
         }
 
     }
