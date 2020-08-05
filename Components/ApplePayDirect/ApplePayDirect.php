@@ -23,25 +23,6 @@ class ApplePayDirect implements ApplePayDirectInterface
      */
     const KEY_MOLLIE_APPLEPAY_BUTTON = 'sMollieApplePayDirectButton';
 
-    /**
-     * @var $sBasket
-     */
-    private $sBasket;
-
-    /**
-     * @var $sAdmin
-     */
-    private $sAdmin;
-
-
-    /**
-     */
-    public function __construct()
-    {
-        $this->sBasket = Shopware()->Modules()->Basket();
-        $this->sAdmin = Shopware()->Modules()->Admin();
-    }
-
 
     /**
      * @param Shop $shop
@@ -50,13 +31,16 @@ class ApplePayDirect implements ApplePayDirectInterface
      */
     public function getApplePayCart(Shop $shop, $country)
     {
+        $sBasket = Shopware()->Modules()->Basket();
+        $sAdmin = Shopware()->Modules()->Admin();
+
         $cart = new ApplePayCart(
             'DE', # todo country, von wo?
             $shop->getCurrency()->getCurrency()
         );
 
         /** @var array $item */
-        foreach ($this->sBasket->sGetBasketData()['content'] as $item) {
+        foreach ($sBasket->sGetBasketData()['content'] as $item) {
             $cart->addItem(
                 $item['ordernumber'],
                 $item['articlename'],
@@ -66,7 +50,7 @@ class ApplePayDirect implements ApplePayDirectInterface
         }
 
         /** @var array $shipping */
-        $shipping = $this->sAdmin->sGetPremiumShippingcosts($country);
+        $shipping = $sAdmin->sGetPremiumShippingcosts($country);
 
         if ($shipping['value'] > 0) {
             $cart->addItem(
