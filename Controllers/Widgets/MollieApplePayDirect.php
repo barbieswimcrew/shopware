@@ -14,6 +14,11 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
 {
 
     /**
+     * This route adds the provided article
+     * to the cart.
+     * It will first create a snapshot (todo) of the current
+     * cart, then it will delete it and only add our single product to it.
+     * 
      * @throws Enlight_Event_Exception
      * @throws Enlight_Exception
      * @throws Zend_Db_Adapter_Exception
@@ -43,7 +48,12 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
     }
 
     /**
-     *
+     * This route returns a JSON with the current
+     * cart and all available shipping methods for the
+     * provided country.
+     * The shipping methods have to be configured for
+     * Apple Pay Direct and the country.
+     * The code will also lookup the shipping costs for each method.
      */
     public function getShippingsAction()
     {
@@ -52,64 +62,30 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
         /** @var ApplePayDirectInterface $applePay */
         $applePay = Shopware()->Container()->get('mollie_shopware.components.applepay_direct');
 
-        $countryCode = $this->Request()->getParam('countryCode');
-
-
-        $userCountry = $this->getCountry($countryCode);
-
-        $applePayMethodId = $applePay->getPaymentMethodID($this->admin);
-
-        $dispatchMethods = array();
-
-        if ($userCountry !== null) {
-            $dispatchMethods = $shipping->getShippingMethods($userCountry['id'], $applePayMethodId);
-        }
-
-        $selectedMethod = null;
-        $otherMethods = array();
-
-        $selectedMethodID = $this->session['sDispatch'];
-
-        /** @var array $method */
-        foreach ($dispatchMethods as $method) {
-            if ($selectedMethodID === $method['id']) {
-                $selectedMethod = array(
-                    'identifier' => $method['id'],
-                    'label' => $method['name'],
-                    'detail' => $method['description'],
-                    'amount' => $shipping->getShippingMethodCosts($userCountry, $method['id'])
-                );
-            } else {
-                $otherMethods[] = array(
-                    'identifier' => $method['id'],
-                    'label' => $method['name'],
-                    'detail' => $method['description'],
-                    'amount' => $shipping->getShippingMethodCosts($userCountry, $method['id'])
-                );
-            }
-        }
-
 
         $shippingMethods = array();
 
-        if ($selectedMethod !== null) {
-            $shippingMethods[] = $selectedMethod;
-        } else {
-            # set first one as default
-            foreach ($otherMethods as $method) {
-                $this->session['sDispatch'] = $method['identifier'];
-                break;
-            }
-        }
+        /** @var string $countryCode */
+        $countryCode = $this->Request()->getParam('countryCode');
 
-        foreach ($otherMethods as $method) {
-            $shippingMethods[] = $method;
-        }
+        /** @var array $userCountry */
+        $userCountry = $this->getCountry($countryCode);
 
-        $cart = $this->getCart();
+        if ($userCountry !== null) {
+            /** @var int $applePayMethodId */
+            $applePayMethodId = $applePay->getPaymentMethodID($this->admin);
+
+            # get all available shipping methods
+            # for apple pay direct and our selected country
+            $dispatchMethods = $shipping->getShippingMethods($userCountry['id'], $applePayMethodId);
+
+            # now build an apple pay conform array
+            # of these shipping methods
+            $shippingMethods = $this->formatApplePayShippingMethods($dispatchMethods, $userCountry);
+        }
 
         $data = array(
-            'cart' => $cart->toArray(),
+            'cart' => $this->getCart()->toArray(),
             'shippingmethods' => $shippingMethods,
         );
 
@@ -257,4 +233,57 @@ class Shopware_Controllers_Widgets_MollieApplePayDirect extends Shopware_Control
         return $foundCountry;
     }
 
+    /**
+     * @param array $dispatchMethods
+     * @param $userCountry
+     * @return array
+     */
+    private function formatApplePayShippingMethods(array $dispatchMethods, $userCountry)
+    {
+        $shipping = new Shipping($this->admin, $this->session);
+
+
+        $selectedMethod = null;
+        $otherMethods = array();
+
+        $selectedMethodID = $this->session['sDispatch'];
+
+        /** @var array $method */
+        foreach ($dispatchMethods as $method) {
+
+            if ($selectedMethodID === $method['id']) {
+                $selectedMethod = array(
+                    'identifier' => $method['id'],
+                    'label' => $method['name'],
+                    'detail' => $method['description'],
+                    'amount' => $shipping->getShippingMethodCosts($userCountry, $method['id'])
+                );
+            } else {
+                $otherMethods[] = array(
+                    'identifier' => $method['id'],
+                    'label' => $method['name'],
+                    'detail' => $method['description'],
+                    'amount' => $shipping->getShippingMethodCosts($userCountry, $method['id'])
+                );
+            }
+        }
+
+        $shippingMethods = array();
+
+        if ($selectedMethod !== null) {
+            $shippingMethods[] = $selectedMethod;
+        } else {
+            # set first one as default
+            foreach ($otherMethods as $method) {
+                $this->session['sDispatch'] = $method['identifier'];
+                break;
+            }
+        }
+
+        foreach ($otherMethods as $method) {
+            $shippingMethods[] = $method;
+        }
+
+        return $shippingMethods;
+    }
 }
