@@ -131,7 +131,7 @@ class ApplePayCart
             $data['items'][] = array(
                 # apple pay required
                 # -------------------------------
-                'label' => $item->getName(),
+                'label' => $item->getQuantity() . "x " . $item->getName(),
                 'type' => 'final',
                 'amount' => $item->getPrice(),
                 # additional

@@ -420,10 +420,6 @@ class PaymentService
             $paymentParameters
         );
 
-        if ((string) $paymentMethod === PaymentMethod::APPLEPAY_DIRECT) {
-            # assign the payment token
-            $paymentMethod = PaymentMethod::APPLE_PAY;
-        }
 
         // create prepared order array
         $molliePrepared = [
@@ -473,6 +469,12 @@ class PaymentService
                 $paymentMethod,
                 $molliePrepared
             );
+        }
+
+
+        if ((string) $paymentMethod === PaymentMethod::APPLEPAY_DIRECT) {
+            # assign the payment token
+            $molliePrepared['method']  = PaymentMethod::APPLE_PAY;
         }
 
         return $molliePrepared;

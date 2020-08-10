@@ -111,7 +111,6 @@
                                 session.completeMerchantValidation(validationData);
                             }
                         ).fail(function (xhr, status, error) {
-                            console.log('Apple Pay Error: ' + error);
                             session.abort();
                         });
                     };
@@ -121,8 +120,6 @@
                      * @param e
                      */
                     session.onpaymentauthorized = function (e) {
-                        console.log('Apple Pay: Authorized');
-                        console.log(e);
                         let paymentToken = e.payment.token;
                         paymentToken = JSON.stringify(paymentToken);
 
