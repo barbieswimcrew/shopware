@@ -188,9 +188,18 @@
                 method: 'POST'
             });
 
-            createField('paymentToken', paymentToken).appendTo($form);
+
+            // add billing data
+            createField('email', payment.shippingContact.emailAddress).appendTo($form);
+            createField('lastname', payment.shippingContact.familyName).appendTo($form);
+            createField('firstname', payment.shippingContact.givenName).appendTo($form);
             createField('street', payment.shippingContact.addressLines[0]).appendTo($form);
             createField('postalCode', payment.shippingContact.postalCode).appendTo($form);
+            createField('city', payment.shippingContact.locality).appendTo($form);
+            createField('countryCode', payment.shippingContact.countryCode).appendTo($form);
+            createField('phone', payment.shippingContact.phoneNumber).appendTo($form);
+            // also add our payment token
+            createField('paymentToken', paymentToken).appendTo($form);
 
             $form.appendTo($('body'));
 

@@ -192,28 +192,41 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
      */
     public function createPaymentAction()
     {
+        $email = $this->Request()->getParam('email', '');
+        $firstname = $this->Request()->getParam('firstname', '');
+        $lastname = $this->Request()->getParam('lastname', '');
+
+        $street = $this->Request()->getParam('street', '');
+        $zipcode = $this->Request()->getParam('postalCode', '');
+        $city = $this->Request()->getParam('city', '');
+        $countryCode = $this->Request()->getParam('countryCode', '');
+
+        $phone = $this->Request()->getParam('phone', '');
+
         $paymentToken = $this->Request()->getParam('paymentToken', '');
 
-        $email = '';
-        $payerId = '';
-        $salutation = 'mr';
-        $firstname = '';
-        $lastname = '';
-        $street = $this->Request()->getParam('street', '');
-        $streetnumber = '';
-        $zipcode = $this->Request()->getParam('postalCode', '');
-        $city = '';
-        $countryID = 0;
-        $stateID = 0;
-        $customerType = 'private'; // or 'business
-        $company = '';
-        $department = '';
-        $phone = '';
 
-        var_dump($paymentToken);
-        var_dump($street);
-        var_dump($zipcode);
-        
+        /** @var array $country */
+        $country = $this->getCountry($countryCode);
+
+        $account = new MollieShopware\Components\Account\Account(
+            $this->admin,
+            $this->session,
+            $this->container->get('passwordencoder'),
+            $this->container->get('mollie_shopware.components.apple_pay_direct.gateway.dbal.register_guest_customer_gateway')
+        );
+
+        $account->createGuestAccount(
+            $email,
+            $firstname,
+            $lastname,
+            $street,
+            $zipcode,
+            $city,
+            $country['id'],
+            $phone
+        );
+
         die('Finishing Apple Pay Payment');
     }
 
