@@ -116,6 +116,14 @@ class Account
     }
 
     /**
+     * @param $email
+     */
+    public function getGuestAccount($email)
+    {
+        return $this->gwGuestCustomer->getGuest($email);
+    }
+
+    /**
      * @param $authData
      * @throws \Exception
      */

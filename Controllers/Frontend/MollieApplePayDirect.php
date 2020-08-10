@@ -203,8 +203,6 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
 
         $phone = $this->Request()->getParam('phone', '');
 
-        $paymentToken = $this->Request()->getParam('paymentToken', '');
-
 
         /** @var array $country */
         $country = $this->getCountry($countryCode);
@@ -227,7 +225,38 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
             $phone
         );
 
-        die('Finishing Apple Pay Payment');
+
+        $guest = $account->getGuestAccount($email);
+
+
+        $sOrderVariables = $this->getBasket(false);
+
+        $basket = $this->getBasket(false);
+        $sOrderVariables['sBasketView'] = $basket;
+        $sOrderVariables['sBasket'] = $basket;
+        $sOrderVariables['sUserData'] = $this->View()->getAssign('sUserData');
+
+        $sOrderVariables = new ArrayObject($sOrderVariables, ArrayObject::ARRAY_AS_PROPS);
+
+
+        $this->session->offsetSet('sOrderVariables', $sOrderVariables);
+        $this->session->offsetSet('sUserId', $guest['id']);
+
+        #   var_dump($sOrderVariables);
+        #var_dump($this->session->offsetGet('sOrderVariables')->getArrayCopy());
+        #    die('dangl');
+
+        # $this->sUserData['additional']['user']['paymentID']
+
+        # save our payment token
+        # that will be used when creating the
+        # payment in the mollie controller action
+        $paymentToken = $this->Request()->getParam('paymentToken', '');
+
+        $this->session->offsetSet('MOLLIE_APPLEPAY_PAYENTTOKEN', $paymentToken);
+
+
+        $this->redirect('/Mollie/direct');
     }
 
     /**

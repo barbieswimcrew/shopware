@@ -42,7 +42,8 @@ class RegisterGuestCustomerGateway implements RegisterGuestCustomerGatewayInterf
         $modules,
         ContextServiceInterface $contextService,
         RegisterServiceInterface $registerService
-    ) {
+    )
+    {
         $this->addressService = $addressService;
         $this->em = $em;
         $this->formFactory = $formFactory;
@@ -51,6 +52,9 @@ class RegisterGuestCustomerGateway implements RegisterGuestCustomerGatewayInterf
         $this->shop = $contextService->getShopContext()->getShop();
     }
 
+    /**
+     * @return mixed
+     */
     public function getPaymentMeanId()
     {
         $paymentMean = $this->em->getRepository(Payment::class)->findOneBy(
@@ -96,6 +100,11 @@ class RegisterGuestCustomerGateway implements RegisterGuestCustomerGatewayInterf
         return $qb->getQuery()->getArrayResult()[0]['hashPassword'];
     }
 
+    /**
+     * @param $userId
+     * @param $shippingData
+     * @return mixed|void
+     */
     public function updateShipping($userId, $shippingData)
     {
         /** @var Customer $customer */
@@ -110,6 +119,10 @@ class RegisterGuestCustomerGateway implements RegisterGuestCustomerGatewayInterf
         $this->addressService->update($address);
     }
 
+    /**
+     * @param $auth
+     * @param $shipping
+     */
     public function saveUser($auth, $shipping)
     {
         $plain = array_merge($auth, $shipping);
@@ -124,6 +137,32 @@ class RegisterGuestCustomerGateway implements RegisterGuestCustomerGatewayInterf
         $form->submit($plain);
 
         $this->registerService->register($this->shop, $customer, $address, $address);
+    }
+
+    /**
+     * @param $email
+     * @return mixed
+     */
+    public function getGuest($email)
+    {
+        $qb = $this->em->createQueryBuilder();
+
+        $qb->select('c')
+            ->from(Customer::class, 'c')
+            ->where($qb->expr()->like('c.email', ':email'))
+            ->andWhere($qb->expr()->eq('c.active', 1))
+            ->andWhere($qb->expr()->eq('c.accountMode', 1))
+            ->setParameter(':email', $email);
+
+        if ($this->shop->hasCustomerScope()) {
+            $qb->andWhere($qb->expr()->eq('c.shopId', $this->shop->getId()));
+        }
+
+        # Always use the latest account. It is possible, that the account already exists but the password may be invalid.
+        # The plugin then creates a new account and uses that one instead.
+        $qb->orderBy('c.id', 'DESC');
+
+        return $qb->getQuery()->getArrayResult()[0];
     }
 
 }
