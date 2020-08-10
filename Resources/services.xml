@@ -46,6 +46,9 @@
             <argument type="service" id="models"/>
         </service>
 
+        <service id="mollie_shopware.applepay_direct_service" class="MollieShopware\Components\ApplePayDirect\ApplePayDirect">
+        </service>
+
         <service id="mollie_shopware.schema" class="MollieShopware\Components\Schema">
             <argument type="service" id="models"/>
         </service>

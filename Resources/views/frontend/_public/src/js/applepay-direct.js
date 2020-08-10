@@ -28,11 +28,14 @@
 
 
                     if (button.dataset.addproducturl) {
+
+                        const comboQuantity = document.getElementById('sQuantity');
+
                         $.post(
                             button.dataset.addproducturl,
                             {
                                 number: button.dataset.productnumber,
-                                quantity: 1,
+                                quantity: comboQuantity.value,
                             }
                         ).done(function (data) {
                             }

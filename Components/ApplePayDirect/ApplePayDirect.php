@@ -23,6 +23,12 @@ class ApplePayDirect implements ApplePayDirectInterface
      */
     const KEY_MOLLIE_APPLEPAY_BUTTON = 'sMollieApplePayDirectButton';
 
+    /**
+     */
+    public function __construct()
+    {
+
+    }
 
     /**
      * @param Shop $shop
@@ -68,7 +74,6 @@ class ApplePayDirect implements ApplePayDirectInterface
 
         return $cart;
     }
-
 
     /**
      * @param Enlight_Controller_Request_Request $request
@@ -165,4 +170,19 @@ class ApplePayDirect implements ApplePayDirectInterface
         return ($applePayDirect instanceof Payment);
     }
 
+    /**
+     * @param $token
+     */
+    public function setPaymentToken($token)
+    {
+        Shopware()->Session()->offsetSet('MOLLIE_APPLEPAY_PAYENTTOKEN', $token);
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getPaymentToken()
+    {
+        return Shopware()->Session()->offsetGet('MOLLIE_APPLEPAY_PAYENTTOKEN');
+    }
 }

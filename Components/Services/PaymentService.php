@@ -3,6 +3,7 @@
 namespace MollieShopware\Components\Services;
 
 use Mollie\Api\Exceptions\ApiException;
+use MollieShopware\Components\ApplePayDirect\ApplePayDirectInterface;
 use MollieShopware\Components\Constants\PaymentMethod;
 use MollieShopware\Components\Constants\PaymentStatus;
 use MollieShopware\Models\Transaction;
@@ -419,6 +420,11 @@ class PaymentService
             $paymentParameters
         );
 
+        if ((string) $paymentMethod === PaymentMethod::APPLEPAY_DIRECT) {
+            # assign the payment token
+            $paymentMethod = PaymentMethod::APPLE_PAY;
+        }
+
         // create prepared order array
         $molliePrepared = [
             'amount' => $this->getPriceArray(
@@ -612,6 +618,16 @@ class PaymentService
         /** @var CreditCardService $creditCardService */
         $creditCardService = Shopware()->Container()->get('mollie_shopware.credit_card_service');
         return $creditCardService->getCardToken();
+    }
+
+    /**
+     * @return string
+     */
+    protected function getApplePayPaymentToken()
+    {
+        /** @var ApplePayDirectInterface $service */
+        $service = Shopware()->Container()->get('mollie_shopware.applepay_direct_service');
+        return $service->getPaymentToken();
     }
 
     /**
@@ -1043,6 +1059,11 @@ class PaymentService
                 (string) $this->getCreditCardToken() !== '') {
                 $paymentParameters['cardToken'] = $this->getCreditCardToken();
             }
+        }
+
+        if ((string) $paymentMethod === PaymentMethod::APPLEPAY_DIRECT) {
+            # assign the payment token
+            $paymentParameters["applePayPaymentToken"] = $this->getApplePayPaymentToken();
         }
 
         return $paymentParameters;

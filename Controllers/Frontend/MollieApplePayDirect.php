@@ -243,8 +243,8 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
         $this->session->offsetSet('sUserId', $guest['id']);
 
         #   var_dump($sOrderVariables);
-        #var_dump($this->session->offsetGet('sOrderVariables')->getArrayCopy());
-        #    die('dangl');
+      #  var_dump($this->session->offsetGet('sOrderVariables')->getArrayCopy());
+       #     die('dangl');
 
         # $this->sUserData['additional']['user']['paymentID']
 
@@ -253,6 +253,7 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
         # payment in the mollie controller action
         $paymentToken = $this->Request()->getParam('paymentToken', '');
 
+        # todo use component
         $this->session->offsetSet('MOLLIE_APPLEPAY_PAYENTTOKEN', $paymentToken);
 
 
