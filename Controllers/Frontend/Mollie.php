@@ -142,10 +142,23 @@ class Shopware_Controllers_Frontend_Mollie extends AbstractPaymentController
             }
         }
 
-        $checkoutUrl = $paymentService->startTransaction(
-            $this->getPaymentShortName(),
-            $transaction
-        );
+
+        try {
+
+            $checkoutUrl = $paymentService->startTransaction($this->getPaymentShortName(), $transaction);
+        }
+        catch (Throwable $ex) {
+            # create logs for everything that happens in here
+            Logger::log('error', 'Error when finishing Mollie order: ' . $ex->getMessage(), $ex, false);
+
+            # restore our basket immediately if
+            # our configuration did already create that order before
+            if ($this->getConfig() !== null && $order instanceof Order && $this->getConfig()->createOrderBeforePayment()) {
+                $this->retryOrderRestore($order);
+            }
+
+            return $this->redirectBack('Payment failed');
+        }
 
         if (is_array($checkoutUrl)) {
             return $this->redirectBack($checkoutUrl['error'], $checkoutUrl['message']);
