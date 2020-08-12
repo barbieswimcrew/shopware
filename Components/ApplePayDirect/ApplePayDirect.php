@@ -58,7 +58,7 @@ class ApplePayDirect implements ApplePayDirectInterface
         /** @var array $shipping */
         $shipping = $sAdmin->sGetPremiumShippingcosts($country);
 
-        if ($shipping['value'] > 0) {
+        if ($shipping['value'] !== null && $shipping['value'] > 0) {
             $cart->addItem(
                 'SHIP1',
                 'Shipping',

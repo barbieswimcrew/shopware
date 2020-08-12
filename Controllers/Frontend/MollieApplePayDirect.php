@@ -242,21 +242,20 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
         $this->session->offsetSet('sOrderVariables', $sOrderVariables);
         $this->session->offsetSet('sUserId', $guest['id']);
 
-        #   var_dump($sOrderVariables);
-      #  var_dump($this->session->offsetGet('sOrderVariables')->getArrayCopy());
-       #     die('dangl');
-
-        # $this->sUserData['additional']['user']['paymentID']
 
         # save our payment token
         # that will be used when creating the
         # payment in the mollie controller action
         $paymentToken = $this->Request()->getParam('paymentToken', '');
 
-        # todo use component
-        $this->session->offsetSet('MOLLIE_APPLEPAY_PAYENTTOKEN', $paymentToken);
+        /** @var ApplePayDirectInterface $applePay */
+        $applePay = Shopware()->Container()->get('mollie_shopware.applepay_direct_service');
+
+        $applePay->setPaymentToken($paymentToken);
 
 
+        # redirect to our centralized mollie
+        # direct controller action
         $this->redirect('/Mollie/direct');
     }
 

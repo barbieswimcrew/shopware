@@ -142,9 +142,6 @@ class Shopware_Controllers_Frontend_Mollie extends AbstractPaymentController
             }
         }
 
-        $applePayPaymentToken = Shopware()->Session()->offsetGet('MOLLIE_APPLEPAY_PAYENTTOKEN');
-
-
         $checkoutUrl = $paymentService->startTransaction(
             $this->getPaymentShortName(),
             $transaction

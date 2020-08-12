@@ -54,7 +54,11 @@ class Shipping
 
         $this->setCartShippingMethodID($previousDispatch);
 
-        return $costs['value'];
+        if ($costs['value'] === null) {
+            return 0;
+        }
+
+        return (float)$costs['value'];
     }
 
     /**
