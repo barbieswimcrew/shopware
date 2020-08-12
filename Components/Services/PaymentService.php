@@ -3,6 +3,7 @@
 namespace MollieShopware\Components\Services;
 
 use Mollie\Api\Exceptions\ApiException;
+use Mollie\Api\Resources\Payment;
 use MollieShopware\Components\ApplePayDirect\ApplePayDirectInterface;
 use MollieShopware\Components\Constants\PaymentMethod;
 use MollieShopware\Components\Constants\PaymentStatus;
@@ -12,6 +13,18 @@ use Shopware\Models\Order\Status;
 
 class PaymentService
 {
+
+    /**
+     * yes this is a small hack :)
+     * credit cards without a 3d secure (isnt allowed except on test systems)
+     * do not have a checkout URL. in that case the
+     * payment is immediately PAID and thus we "just" redirect to the finish page.
+     * We need this constants, because the response for the controller is a
+     * string and i dont want to touch anything else.
+     */
+    const CHECKOUT_URL_CC_NON3D_SECURE = 'OK_NON_3dSecure';
+
+
     /** @var \MollieShopware\Components\MollieApiFactory $apiFactory */
     protected $apiFactory;
 
@@ -209,6 +222,21 @@ class PaymentService
             $creditCardService->setCardToken('');
         } catch (\Exception $e) {
             //
+        }
+
+        # if we have no checkout url
+        # but our payment is valid, "paid" and done with a payment method "creditcard"
+        # then we have the case that its a "non 3d secure" card, and thus
+        # its ok that our checkout url is empty. We just "finish" the order in the controller action.
+        if (empty($checkoutUrl)) {
+
+            if ($molliePayment instanceof Payment &&
+                $molliePayment->status === PaymentStatus::MOLLIE_PAYMENT_PAID &&
+                $molliePayment->method === PaymentMethod::CREDITCARD) {
+                # assign our constant which helps us
+                # to finish the order in the controller action
+                $checkoutUrl = self::CHECKOUT_URL_CC_NON3D_SECURE;
+            }
         }
 
         return $checkoutUrl;
@@ -642,6 +670,7 @@ class PaymentService
      */
     public function updateOrderStatus(\Shopware\Models\Order\Order $order, $transactionId)
     {
+        $orderId = null;
         $paymentId = null;
 
         /** @var TransactionRepository $transactionRepo */
@@ -653,7 +682,12 @@ class PaymentService
         $transaction = $transactionRepo->find($transactionId);
 
         if ($transaction !== null) {
+            $orderId = $transaction->getMollieId();
             $paymentId = $transaction->getMolliePaymentId();
+        }
+
+        if ($orderId !== null) {
+            $this->checkOrderStatus($order);
         }
 
         return $this->checkPaymentStatus($order, $paymentId);
@@ -880,9 +914,23 @@ class PaymentService
         // get the order module
         $sOrder = Shopware()->Modules()->Order();
 
+        // get the history service
+        /** @var OrderHistoryService $historyService */
+        $historyService = Shopware()->Container()->get('mollie_shopware.order_history_service');
+
         // the order is completed
-        if ($status == PaymentStatus::MOLLIE_PAYMENT_COMPLETED) {
-            if ($type == 'order' && $this->config->updateOrderStatus()) {
+        if ($status === PaymentStatus::MOLLIE_PAYMENT_COMPLETED) {
+            if ($type === 'order' && $this->config->updateOrderStatus()) {
+                if ($historyService !== null) {
+                    $historyService->addOrderHistory(
+                        $order,
+                        Status::ORDER_STATE_COMPLETED,
+                        $order->getOrderStatus()->getId(),
+                        $order->getPaymentStatus()->getId(),
+                        $order->getPaymentStatus()->getId()
+                    );
+                }
+
                 $sOrder->setOrderStatus(
                     $order->getId(),
                     Status::ORDER_STATE_COMPLETED,
@@ -890,61 +938,106 @@ class PaymentService
                 );
             }
 
-            if ($returnResult)
+            if ($returnResult) {
                 return true;
+            }
         }
 
         // the order or payment is paid
-        if ($status == PaymentStatus::MOLLIE_PAYMENT_PAID) {
+        if ($status === PaymentStatus::MOLLIE_PAYMENT_PAID) {
+            if ($historyService !== null) {
+                $historyService->addOrderHistory(
+                    $order,
+                    $order->getOrderStatus()->getId(),
+                    $order->getOrderStatus()->getId(),
+                    Status::PAYMENT_STATE_COMPLETELY_PAID,
+                    $order->getPaymentStatus()->getId()
+                );
+            }
+
             $sOrder->setPaymentStatus(
                 $order->getId(),
                 Status::PAYMENT_STATE_COMPLETELY_PAID,
                 $this->config->sendStatusMail()
             );
 
-            if ($returnResult)
+            if ($returnResult) {
                 return true;
+            }
         }
 
         // the order or payment is authorized
-        if ($status == PaymentStatus::MOLLIE_PAYMENT_AUTHORIZED) {
+        if ($status === PaymentStatus::MOLLIE_PAYMENT_AUTHORIZED) {
             $sOrder->setPaymentStatus(
                 $order->getId(),
                 $this->config->getAuthorizedPaymentStatusId(),
                 $this->config->sendStatusMail()
             );
 
-            if ($returnResult)
+            if ($returnResult) {
                 return true;
+            }
         }
 
         // the payment is delayed
-        if ($status == PaymentStatus::MOLLIE_PAYMENT_DELAYED) {
+        if ($status === PaymentStatus::MOLLIE_PAYMENT_DELAYED) {
+            if ($historyService !== null) {
+                $historyService->addOrderHistory(
+                    $order,
+                    $order->getOrderStatus()->getId(),
+                    $order->getOrderStatus()->getId(),
+                    Status::PAYMENT_STATE_DELAYED,
+                    $order->getPaymentStatus()->getId()
+                );
+            }
+
             $sOrder->setPaymentStatus(
                 $order->getId(),
                 Status::PAYMENT_STATE_DELAYED,
                 $this->config->sendStatusMail()
             );
 
-            if ($returnResult)
+            if ($returnResult) {
                 return true;
+            }
         }
 
         // the payment is open
-        if ($status == PaymentStatus::MOLLIE_PAYMENT_OPEN) {
+        if ($status === PaymentStatus::MOLLIE_PAYMENT_OPEN) {
+            if ($historyService !== null) {
+                $historyService->addOrderHistory(
+                    $order,
+                    $order->getOrderStatus()->getId(),
+                    $order->getOrderStatus()->getId(),
+                    Status::PAYMENT_STATE_OPEN,
+                    $order->getPaymentStatus()->getId()
+                );
+            }
+
             $sOrder->setPaymentStatus(
                 $order->getId(),
                 Status::PAYMENT_STATE_OPEN,
                 $this->config->sendStatusMail()
             );
 
-            if ($returnResult)
+            if ($returnResult) {
                 return true;
+            }
         }
 
         // the order or payment is canceled
-        if ($status == PaymentStatus::MOLLIE_PAYMENT_CANCELED) {
-            if ($type == 'payment') {
+        if ($status === PaymentStatus::MOLLIE_PAYMENT_CANCELED) {
+            if ($type === 'payment') {
+                if ($historyService !== null) {
+                    $historyService->addOrderHistory(
+                        $order,
+                        $order->getOrderStatus()->getId(),
+                        $order->getOrderStatus()->getId(),
+                        Status::PAYMENT_STATE_THE_PROCESS_HAS_BEEN_CANCELLED,
+                        $order->getPaymentStatus()->getId()
+                    );
+                }
+
                 $sOrder->setPaymentStatus(
                     $order->getId(),
                     Status::PAYMENT_STATE_THE_PROCESS_HAS_BEEN_CANCELLED,
@@ -952,25 +1045,53 @@ class PaymentService
                 );
             }
 
-            if ($this->config->cancelFailedOrders() || ($type == 'order' && $this->config->updateOrderStatus())) {
+            if (
+                $this->config->cancelFailedOrders()
+                || (
+                    $type === 'order'
+                    && $this->config->updateOrderStatus()
+                )
+            ) {
+                if ($historyService !== null) {
+                    $historyService->addOrderHistory(
+                        $order,
+                        Status::ORDER_STATE_CANCELLED_REJECTED,
+                        $order->getOrderStatus()->getId(),
+                        $order->getPaymentStatus()->getId(),
+                        $order->getPaymentStatus()->getId()
+                    );
+                }
+
                 $sOrder->setOrderStatus(
                     $order->getId(),
                     Status::ORDER_STATE_CANCELLED_REJECTED,
                     $this->config->sendStatusMail()
                 );
 
-                if ($this->config->autoResetStock())
+                if ($this->config->autoResetStock()) {
                     $this->resetStock($order);
+                }
             }
 
-            if ($returnResult)
+            if ($returnResult) {
                 return true;
+            }
         }
 
         // the payment has failed or is expired
-        if ($status == PaymentStatus::MOLLIE_PAYMENT_FAILED ||
-            $status == PaymentStatus::MOLLIE_PAYMENT_EXPIRED) {
-            if ($type == 'payment') {
+        if ($status === PaymentStatus::MOLLIE_PAYMENT_FAILED ||
+            $status === PaymentStatus::MOLLIE_PAYMENT_EXPIRED) {
+            if ($type === 'payment') {
+                if ($historyService !== null) {
+                    $historyService->addOrderHistory(
+                        $order,
+                        $order->getOrderStatus()->getId(),
+                        $order->getOrderStatus()->getId(),
+                        Status::PAYMENT_STATE_THE_PROCESS_HAS_BEEN_CANCELLED,
+                        $order->getPaymentStatus()->getId()
+                    );
+                }
+
                 $sOrder->setPaymentStatus(
                     $order->getId(),
                     Status::PAYMENT_STATE_THE_PROCESS_HAS_BEEN_CANCELLED,
@@ -979,18 +1100,30 @@ class PaymentService
             }
 
             if ($this->config->cancelFailedOrders()) {
+                if ($historyService !== null) {
+                    $historyService->addOrderHistory(
+                        $order,
+                        Status::ORDER_STATE_CANCELLED_REJECTED,
+                        $order->getOrderStatus()->getId(),
+                        $order->getPaymentStatus()->getId(),
+                        $order->getPaymentStatus()->getId()
+                    );
+                }
+
                 $sOrder->setOrderStatus(
                     $order->getId(),
                     Status::ORDER_STATE_CANCELLED_REJECTED,
                     $this->config->sendStatusMail()
                 );
 
-                if ($this->config->autoResetStock())
+                if ($this->config->autoResetStock()) {
                     $this->resetStock($order);
+                }
             }
 
-            if ($returnResult)
+            if ($returnResult) {
                 return true;
+            }
         }
     }
 

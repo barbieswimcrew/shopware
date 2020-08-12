@@ -70,7 +70,7 @@ class ApplePayDirectSubscriber implements SubscriberInterface
         # the data depends on our page.
         # this might either be a product on PDP, or the full cart data
         /** @var ApplePayDirectInterface $applePay */
-        $applePay = Shopware()->Container()->get('mollie_shopware.components.applepay_direct');
+        $applePay = Shopware()->Container()->get('mollie_shopware.applepay_direct_service');
 
         $applePay->addButtonStatus($request, $view, Shopware()->Shop());
     }

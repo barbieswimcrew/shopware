@@ -153,6 +153,8 @@ class MollieShopware extends Plugin
 
     /**
      * @param UpdateContext $context
+     *
+     * @throws Exception
      */
     public function update(UpdateContext $context)
     {

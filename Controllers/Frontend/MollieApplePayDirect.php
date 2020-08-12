@@ -69,7 +69,7 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
     public function getShippingsAction()
     {
         /** @var ApplePayDirectInterface $applePay */
-        $applePay = Shopware()->Container()->get('mollie_shopware.components.applepay_direct');
+        $applePay = Shopware()->Container()->get('mollie_shopware.applepay_direct_service');
 
         $shippingMethods = array();
 
@@ -158,7 +158,7 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
         try {
 
             /** @var ApplePayDirectInterface $applePay */
-            $applePay = Shopware()->Container()->get('mollie_shopware.components.applepay_direct');
+            $applePay = Shopware()->Container()->get('mollie_shopware.applepay_direct_service');
 
             /** @var \Mollie\Api\MollieApiClient $mollieApi */
             $mollieApi = $this->getMollieApi();
@@ -296,7 +296,7 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
     private function getCart()
     {
         /** @var ApplePayDirectInterface $applePay */
-        $applePay = Shopware()->Container()->get('mollie_shopware.components.applepay_direct');
+        $applePay = Shopware()->Container()->get('mollie_shopware.applepay_direct_service');
 
         $cart = $applePay->getApplePayCart(
             Shopware()->Shop(),

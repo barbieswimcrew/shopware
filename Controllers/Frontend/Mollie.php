@@ -8,6 +8,7 @@ use MollieShopware\Components\Logger;
 use MollieShopware\Components\Notifier;
 use MollieShopware\Components\Constants\PaymentStatus;
 use MollieShopware\Components\Base\AbstractPaymentController;
+use MollieShopware\Components\Services\PaymentService;
 use MollieShopware\Models\Transaction;
 use MollieShopware\Models\TransactionRepository;
 use Shopware\Models\Order\Order;
@@ -160,6 +161,19 @@ class Shopware_Controllers_Frontend_Mollie extends AbstractPaymentController
             return $this->redirectBack('Payment failed');
         }
 
+        if ($checkoutUrl === PaymentService::CHECKOUT_URL_CC_NON3D_SECURE) {
+            # just finish our payment by redirecting
+            # to our return, such as if the user would have really
+            # visited the mollie payment form.
+            return $this->redirect(
+                [
+                    'controller' => 'Mollie',
+                    'action' => 'return',
+                    'transactionNumber' => $transaction->getId(),
+                ]
+            );
+        }
+
         if (is_array($checkoutUrl)) {
             return $this->redirectBack($checkoutUrl['error'], $checkoutUrl['message']);
         }
@@ -278,16 +292,6 @@ class Shopware_Controllers_Frontend_Mollie extends AbstractPaymentController
         $paymentService = $this->container
             ->get('mollie_shopware.payment_service');
 
-        try {
-            $order = $this->getOrder();
-        }
-        catch(\Exception $e) {
-            Notifier::notifyException(
-                $e->getMessage(),
-                $e
-            );
-        }
-
         if (
             $transactionNumber !== ''
             && ($order === null || !$order instanceof \Shopware\Models\Order\Order)
@@ -324,7 +328,7 @@ class Shopware_Controllers_Frontend_Mollie extends AbstractPaymentController
                     );
                 }
             } else {
-                Notifier::notifyException(
+                Notifier::notifyOk(
                     'Order not found'
                 );
             }
