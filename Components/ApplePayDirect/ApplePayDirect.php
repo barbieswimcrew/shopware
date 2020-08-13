@@ -153,6 +153,26 @@ class ApplePayDirect implements ApplePayDirectInterface
     }
 
     /**
+     * @param \sAdmin $admin
+     * @return int|string
+     * @throws \Exception
+     */
+    public function getPaymentMethod(\sAdmin $admin)
+    {
+        $means = $admin->sGetPaymentMeans();
+
+        foreach ($means as $paymentID => $payment) {
+
+            if ($payment['name'] === ApplePayDirectInterface::APPLEPAY_DIRECT_NAME) {
+                return $payment;
+            }
+        }
+
+        throw new \Exception('Apple Pay Direct Payment not found');
+    }
+
+
+    /**
      * @return bool
      */
     private function isApplePayDirectAvailable(): bool

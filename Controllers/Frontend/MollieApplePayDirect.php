@@ -192,6 +192,11 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
      */
     public function createPaymentAction()
     {
+        /** @var ApplePayDirectInterface $applePay */
+        $applePay = Shopware()->Container()->get('mollie_shopware.applepay_direct_service');
+
+
+
         $email = $this->Request()->getParam('email', '');
         $firstname = $this->Request()->getParam('firstname', '');
         $lastname = $this->Request()->getParam('lastname', '');
@@ -236,8 +241,13 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
         $sOrderVariables['sBasket'] = $basket;
         $sOrderVariables['sUserData'] = $this->View()->getAssign('sUserData');
 
-        $sOrderVariables = new ArrayObject($sOrderVariables, ArrayObject::ARRAY_AS_PROPS);
+        # set to payment method "apple pay direct"
+        $sOrderVariables['sUserData'] ['additional']['user']['paymentID'] = $applePay->getPaymentMethodID($this->admin);
+        $sOrderVariables['sUserData'] ['additional']['payment'] = $applePay->getPaymentMethod($this->admin);
 
+
+        $sOrderVariables = new ArrayObject($sOrderVariables, ArrayObject::ARRAY_AS_PROPS);
+        
 
         $this->session->offsetSet('sOrderVariables', $sOrderVariables);
         $this->session->offsetSet('sUserId', $guest['id']);
@@ -248,8 +258,6 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
         # payment in the mollie controller action
         $paymentToken = $this->Request()->getParam('paymentToken', '');
 
-        /** @var ApplePayDirectInterface $applePay */
-        $applePay = Shopware()->Container()->get('mollie_shopware.applepay_direct_service');
 
         $applePay->setPaymentToken($paymentToken);
 

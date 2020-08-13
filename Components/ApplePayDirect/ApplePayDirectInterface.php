@@ -53,6 +53,11 @@ interface ApplePayDirectInterface
      * @return mixed
      */
     public function getPaymentMethodID(\sAdmin $admin);
+    /**
+     * @param \sAdmin $admin
+     * @return array
+     */
+    public function getPaymentMethod(\sAdmin $admin);
 
     /**
      * @param $token
