@@ -20,7 +20,9 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
     public function getWhitelistedCSRFActions()
     {
         return [
-            'createPayment' # todo, vl nicht so gut ha :D
+            # todo, vl nicht so gut ha :D
+            'startPayment',
+            'finishPayment',
         ];
     }
 
@@ -36,6 +38,8 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
      */
     public function addProductAction()
     {
+        Shopware()->Plugins()->Controller()->ViewRenderer()->setNoRender();
+
         $basket = $this->basket;
         $admin = $this->admin;
 
@@ -68,6 +72,8 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
      */
     public function getShippingsAction()
     {
+        Shopware()->Plugins()->Controller()->ViewRenderer()->setNoRender();
+
         /** @var ApplePayDirectInterface $applePay */
         $applePay = Shopware()->Container()->get('mollie_shopware.applepay_direct_service');
 
@@ -110,6 +116,8 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
      */
     public function setShippingAction()
     {
+        Shopware()->Plugins()->Controller()->ViewRenderer()->setNoRender();
+
         $shippingIdentifier = $this->Request()->getParam('identifier', '');
 
         if (!empty($shippingIdentifier)) {
@@ -133,6 +141,8 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
      */
     public function restoreCartAction()
     {
+        Shopware()->Plugins()->Controller()->ViewRenderer()->setNoRender();
+
         $basket = $this->basket;
 
         $basket->sDeleteBasket();
@@ -190,77 +200,109 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
      *
      * @throws Exception
      */
-    public function createPaymentAction()
+    public function startPaymentAction()
     {
+        Shopware()->Plugins()->Controller()->ViewRenderer()->setNoRender();
+
+        try {
+            /** @var ApplePayDirectInterface $applePay */
+            $applePay = Shopware()->Container()->get('mollie_shopware.applepay_direct_service');
+
+
+            $email = $this->Request()->getParam('email', '');
+            $firstname = $this->Request()->getParam('firstname', '');
+            $lastname = $this->Request()->getParam('lastname', '');
+
+            $street = $this->Request()->getParam('street', '');
+            $zipcode = $this->Request()->getParam('postalCode', '');
+            $city = $this->Request()->getParam('city', '');
+            $countryCode = $this->Request()->getParam('countryCode', '');
+
+            $phone = $this->Request()->getParam('phone', '');
+
+            /** @var array $country */
+            $country = $this->getCountry($countryCode);
+
+            if ($country === null) {
+                throw new Exception('No Country found for code ' . $countryCode);
+            }
+
+            $account = new MollieShopware\Components\Account\Account(
+                $this->admin,
+                $this->session,
+                $this->container->get('passwordencoder'),
+                $this->container->get('mollie_shopware.components.apple_pay_direct.gateway.dbal.register_guest_customer_gateway')
+            );
+
+            $account->createGuestAccount(
+                $email,
+                $firstname,
+                $lastname,
+                $street,
+                $zipcode,
+                $city,
+                $country['id'],
+                $phone
+            );
+
+            # now load the guest account
+            # and set the id as "current" user for the next request
+            $guest = $account->getGuestAccount($email);
+            $this->session->offsetSet('sUserId', $guest['id']);
+
+            # save our payment token
+            # that will be used when creating the
+            # payment in the mollie controller action
+            $paymentToken = $this->Request()->getParam('paymentToken', '');
+            $applePay->setPaymentToken($paymentToken);
+
+            # redirect to our finish action
+            # on that action the new guest user is fully loaded
+            # into our view variables and we can continue with
+            # preparing the order in our session and finishing the checkout
+            $this->redirect('/MollieApplePayDirect/finishPayment');
+        } catch (Throwable $ex) {
+
+            var_dump($ex->getMessage());
+        }
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function finishPaymentAction()
+    {
+        Shopware()->Plugins()->Controller()->ViewRenderer()->setNoRender();
+
         /** @var ApplePayDirectInterface $applePay */
         $applePay = Shopware()->Container()->get('mollie_shopware.applepay_direct_service');
 
 
-
-        $email = $this->Request()->getParam('email', '');
-        $firstname = $this->Request()->getParam('firstname', '');
-        $lastname = $this->Request()->getParam('lastname', '');
-
-        $street = $this->Request()->getParam('street', '');
-        $zipcode = $this->Request()->getParam('postalCode', '');
-        $city = $this->Request()->getParam('city', '');
-        $countryCode = $this->Request()->getParam('countryCode', '');
-
-        $phone = $this->Request()->getParam('phone', '');
-
-        /** @var array $country */
-        $country = $this->getCountry($countryCode);
-
-
-        $account = new MollieShopware\Components\Account\Account(
-            $this->admin,
-            $this->session,
-            $this->container->get('passwordencoder'),
-            $this->container->get('mollie_shopware.components.apple_pay_direct.gateway.dbal.register_guest_customer_gateway')
-        );
-
-        $account->createGuestAccount(
-            $email,
-            $firstname,
-            $lastname,
-            $street,
-            $zipcode,
-            $city,
-            $country['id'],
-            $phone
-        );
-
-
-        $guest = $account->getGuestAccount($email);
-
-
-        $sOrderVariables = $this->getBasket(false);
-
         $basket = $this->getBasket(false);
+
+        # the main order variables is the basket, yes
+        $sOrderVariables = $basket;
+
+        # ...however inside our order variables
+        # there are sub array that are also the basket...aehm..yes... :)
         $sOrderVariables['sBasketView'] = $basket;
         $sOrderVariables['sBasket'] = $basket;
+
+        # make sure our user the data is being
+        # correctly added from our previously
+        # created guest user
         $sOrderVariables['sUserData'] = $this->View()->getAssign('sUserData');
 
-        # set to payment method "apple pay direct"
+        # make sure we always use "apple pay direct"
+        # for the order we create
         $sOrderVariables['sUserData'] ['additional']['user']['paymentID'] = $applePay->getPaymentMethodID($this->admin);
         $sOrderVariables['sUserData'] ['additional']['payment'] = $applePay->getPaymentMethod($this->admin);
 
-
+        # finish our variables (shopware default)
         $sOrderVariables = new ArrayObject($sOrderVariables, ArrayObject::ARRAY_AS_PROPS);
-        
 
+        # add the prepared order to our session
         $this->session->offsetSet('sOrderVariables', $sOrderVariables);
-        $this->session->offsetSet('sUserId', $guest['id']);
-
-
-        # save our payment token
-        # that will be used when creating the
-        # payment in the mollie controller action
-        $paymentToken = $this->Request()->getParam('paymentToken', '');
-
-
-        $applePay->setPaymentToken($paymentToken);
-
 
         # redirect to our centralized mollie
         # direct controller action

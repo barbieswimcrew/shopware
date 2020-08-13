@@ -6,7 +6,7 @@
        data-setshippingurl="{url module=frontend controller="MollieApplePayDirect" action="setShipping" forceSecure}"
        data-restorecarturl="{url module=frontend controller="MollieApplePayDirect" action="restoreCart" forceSecure}"
        data-validationurl="{url module=frontend controller="MollieApplePayDirect" action="createPaymentSession" forceSecure}"
-       data-checkouturl="{url module=frontend controller="MollieApplePayDirect" action="createPayment" forceSecure}"
+       data-checkouturl="{url module=frontend controller="MollieApplePayDirect" action="startPayment" forceSecure}"
        data-label="{$sMollieApplePayDirectButton.label}"
        data-amount="{$sMollieApplePayDirectButton.amount}"
        data-country="{$sMollieApplePayDirectButton.country}"
