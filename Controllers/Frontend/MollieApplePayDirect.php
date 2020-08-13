@@ -279,11 +279,8 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
         $applePay = Shopware()->Container()->get('mollie_shopware.applepay_direct_service');
 
         $orderSession = new OrderSession($this->session);
-
-        $orderSession->prepareOrderSession(
-            $this,
-            $applePay->getPaymentMethod($this->admin)
-        );
+        
+        $orderSession->prepareOrderSession($this, $applePay->getPaymentMethod($this->admin));
 
         # redirect to our centralized mollie
         # direct controller action
