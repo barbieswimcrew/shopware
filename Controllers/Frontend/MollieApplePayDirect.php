@@ -203,9 +203,9 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
 
         $phone = $this->Request()->getParam('phone', '');
 
-
         /** @var array $country */
         $country = $this->getCountry($countryCode);
+
 
         $account = new MollieShopware\Components\Account\Account(
             $this->admin,
@@ -318,7 +318,12 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
 
         /** @var array $country */
         foreach ($countries as $country) {
-            if (strtolower($country['iso']) === strtolower($countryCode)) {
+            if (array_key_exists('iso', $country) && strtolower($country['iso']) === strtolower($countryCode)) {
+                $foundCountry = $country;
+                break;
+            }
+
+            if (array_key_exists('countryiso', $country) && strtolower($country['countryiso']) === strtolower($countryCode)) {
                 $foundCountry = $country;
                 break;
             }
