@@ -5,6 +5,7 @@ use Mollie\Api\MollieApiClient;
 use MollieShopware\Components\ApplePayDirect\ApplePayDirect;
 use MollieShopware\Components\ApplePayDirect\ApplePayDirectInterface;
 use MollieShopware\Components\Logger;
+use MollieShopware\Components\Order\OrderSession;
 use MollieShopware\Components\Shipping\Shipping;
 use Shopware\Components\CSRFWhitelistAware;
 
@@ -277,32 +278,13 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
         /** @var ApplePayDirectInterface $applePay */
         $applePay = Shopware()->Container()->get('mollie_shopware.applepay_direct_service');
 
+        $orderSession = new OrderSession($this->session);
 
-        $basket = $this->getBasket(false);
-
-        # the main order variables is the basket, yes
-        $sOrderVariables = $basket;
-
-        # ...however inside our order variables
-        # there are sub array that are also the basket...aehm..yes... :)
-        $sOrderVariables['sBasketView'] = $basket;
-        $sOrderVariables['sBasket'] = $basket;
-
-        # make sure our user the data is being
-        # correctly added from our previously
-        # created guest user
-        $sOrderVariables['sUserData'] = $this->View()->getAssign('sUserData');
-
-        # make sure we always use "apple pay direct"
-        # for the order we create
-        $sOrderVariables['sUserData'] ['additional']['user']['paymentID'] = $applePay->getPaymentMethodID($this->admin);
-        $sOrderVariables['sUserData'] ['additional']['payment'] = $applePay->getPaymentMethod($this->admin);
-
-        # finish our variables (shopware default)
-        $sOrderVariables = new ArrayObject($sOrderVariables, ArrayObject::ARRAY_AS_PROPS);
-
-        # add the prepared order to our session
-        $this->session->offsetSet('sOrderVariables', $sOrderVariables);
+        $orderSession->prepareOrderSession(
+            $this->getBasket(false),
+            $this->View()->getAssign('sUserData'),
+            $applePay->getPaymentMethod($this->admin)
+        );
 
         # redirect to our centralized mollie
         # direct controller action
