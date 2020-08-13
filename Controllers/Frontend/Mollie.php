@@ -50,7 +50,7 @@ class Shopware_Controllers_Frontend_Mollie extends AbstractPaymentController
         $orderCreated = false;
 
         /** @var Order|null $order */
-        $order  = null;
+        $order = null;
 
         try {
 
@@ -189,9 +189,6 @@ class Shopware_Controllers_Frontend_Mollie extends AbstractPaymentController
                 $this->getConfig()->createOrderBeforePayment()) {
                 $this->retryOrderRestore($order);
             }
-
-            var_dump($ex->getMessage());
-            die();
 
             return $this->redirectBack('Payment failed');
         }
