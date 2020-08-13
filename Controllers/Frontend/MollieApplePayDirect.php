@@ -281,8 +281,7 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
         $orderSession = new OrderSession($this->session);
 
         $orderSession->prepareOrderSession(
-            $this->getBasket(false),
-            $this->View()->getAssign('sUserData'),
+            $this,
             $applePay->getPaymentMethod($this->admin)
         );
 
