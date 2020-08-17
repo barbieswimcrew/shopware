@@ -117,7 +117,7 @@ class ApplePayCart
             # apple pay required
             # -------------------------------
             'label' => $this->label,
-            'amount' => $this->getAmount(),
+            'amount' => $this->prepareFloat($this->getAmount()),
             'country' => $this->country,
             'currency' => $this->currency,
             # additional
@@ -133,7 +133,7 @@ class ApplePayCart
                 # -------------------------------
                 'label' => $item->getQuantity() . "x " . $item->getName(),
                 'type' => 'final',
-                'amount' => $item->getPrice(),
+                'amount' => $this->prepareFloat($item->getPrice()),
                 # additional
                 # -------------------------------
                 'number' => $item->getNumber(),
@@ -143,11 +143,28 @@ class ApplePayCart
 
         $data['total'] = array(
             'label' => $this->label,
-            'amount' => $this->getAmount(),
+            'amount' => $this->prepareFloat($this->getAmount()),
             'type' => 'final',
         );
 
         return $data;
+    }
+
+    /**
+     * Attention! When json_encode is being used it will
+     * automatically display digits like this 23.9999998 instead of 23.99.
+     * This is done inside json_encode! So we need to prepare
+     * the value by rounding the number up to the number
+     * of decimals we find here!
+     *
+     * @param $value
+     * @return float
+     */
+    private function prepareFloat($value): float
+    {
+        $countDecimals = strlen(substr(strrchr($value, "."), 1));
+
+        return round($value, $countDecimals);
     }
 
 }
