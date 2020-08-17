@@ -49,15 +49,9 @@ interface ApplePayDirectInterface
     public function downloadDomainAssociationFile($docRoot);
 
     /**
-     * @param \sAdmin $admin
      * @return mixed
      */
-    public function getPaymentMethodID(\sAdmin $admin);
-    /**
-     * @param \sAdmin $admin
-     * @return array
-     */
-    public function getPaymentMethod(\sAdmin $admin);
+    public function getPaymentMethod();
 
     /**
      * @param $token
@@ -66,7 +60,7 @@ interface ApplePayDirectInterface
     public function setPaymentToken($token);
 
     /**
-     * @return string
+     * @return mixed
      */
     public function getPaymentToken();
 

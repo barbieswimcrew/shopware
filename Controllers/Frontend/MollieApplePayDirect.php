@@ -97,7 +97,7 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
 
             if ($userCountry !== null) {
                 /** @var int $applePayMethodId */
-                $applePayMethodId = $applePay->getPaymentMethodID($this->admin);
+                $applePayMethodId = $applePay->getPaymentMethod()->getId();
 
                 # get all available shipping methods
                 # for apple pay direct and our selected country
@@ -299,7 +299,10 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
 
         } catch (Throwable $ex) {
 
-            var_dump($ex->getMessage());
+            Logger::log('error', $ex->getMessage(), $ex);
+
+            http_response_code(500);
+            die();
         }
     }
 
@@ -308,23 +311,36 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
      */
     public function finishPaymentAction()
     {
-        Shopware()->Plugins()->Controller()->ViewRenderer()->setNoRender();
+        try {
 
-        /** @var ApplePayDirectInterface $applePay */
-        $applePay = Shopware()->Container()->get('mollie_shopware.applepay_direct_service');
+            Shopware()->Plugins()->Controller()->ViewRenderer()->setNoRender();
 
-        $orderSession = new OrderSession($this->session);
+            /** @var ApplePayDirectInterface $applePay */
+            $applePay = Shopware()->Container()->get('mollie_shopware.applepay_direct_service');
 
-        $orderSession->prepareOrderSession($this, $applePay->getPaymentMethod($this->admin));
+            $orderSession = Shopware()->Container()->get('mollie_shopware.components.order_session');
 
-        # redirect to our centralized mollie
-        # direct controller action
-        $this->redirect(
-            [
-                'controller' => 'Mollie',
-                'action' => 'direct',
-            ]
-        );
+            /** @var \Shopware\Bundle\StoreFrontBundle\Struct\ShopContext $context */
+            $context = $this->container->get('shopware_storefront.context_service')->getShopContext();
+
+            $orderSession->prepareOrderSession($this, $applePay->getPaymentMethod(), $context);
+
+            # redirect to our centralized mollie
+            # direct controller action
+            $this->redirect(
+                [
+                    'controller' => 'Mollie',
+                    'action' => 'direct',
+                ]
+            );
+
+        } catch (Throwable $ex) {
+
+            Logger::log('error', $ex->getMessage(), $ex);
+
+            http_response_code(500);
+            die();
+        }
     }
 
     /**

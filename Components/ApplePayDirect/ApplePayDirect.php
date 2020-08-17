@@ -12,6 +12,7 @@ use MollieShopware\Components\Services\PaymentMethodService;
 use MollieShopware\Components\Shipping\Shipping;
 use Shopware\Models\Payment\Payment;
 use Shopware\Models\Shop\Shop;
+use Shopware_Components_Modules;
 
 /**
  * @copyright 2020 dasistweb GmbH (https://www.dasistweb.de)
@@ -25,11 +26,47 @@ class ApplePayDirect implements ApplePayDirectInterface
     const KEY_MOLLIE_APPLEPAY_BUTTON = 'sMollieApplePayDirectButton';
 
     /**
+     * @var \sAdmin
      */
-    public function __construct()
-    {
+    private $sAdmin;
 
+    /**
+     * @var Shipping $cmpShipping
+     */
+    private $cmpShipping;
+
+    /**
+     * @var \sBasket
+     */
+    private $sBasket;
+
+    /**
+     * @var PaymentMethodService $paymentMethodService
+     */
+    private $paymentMethodService;
+
+    /**
+     * @var \Enlight_Components_Session_Namespace
+     */
+    private $session;
+
+
+    /**
+     * @param Shopware_Components_Modules $modules
+     * @param Shipping $cmpShipping
+     * @param PaymentMethodService $paymentMethodService
+     * @param $session
+     */
+    public function __construct($modules, Shipping $cmpShipping, PaymentMethodService $paymentMethodService, $session)
+    {
+        $this->sAdmin = $modules->Admin();
+        $this->sBasket = $modules->Basket();
+
+        $this->cmpShipping = $cmpShipping;
+        $this->paymentMethodService = $paymentMethodService;
+        $this->session = $session;
     }
+
 
     /**
      * @param Shop $shop
@@ -39,20 +76,13 @@ class ApplePayDirect implements ApplePayDirectInterface
      */
     public function getApplePayCart(Shop $shop, $country)
     {
-        /** @var Shipping $cmpShipping */
-        $cmpShipping = Shopware()->Container()->get('mollie_shopware.components.shipping');
-
-        $sBasket = Shopware()->Modules()->Basket();
-        $sAdmin = Shopware()->Modules()->Admin();
-
-
         $cart = new ApplePayCart(
             'DE', # todo country, von wo?
             $shop->getCurrency()->getCurrency()
         );
 
         /** @var array $item */
-        foreach ($sBasket->sGetBasketData()['content'] as $item) {
+        foreach ($this->sBasket->sGetBasketData()['content'] as $item) {
             $cart->addItem(
                 $item['ordernumber'],
                 $item['articlename'],
@@ -62,12 +92,12 @@ class ApplePayDirect implements ApplePayDirectInterface
         }
 
         /** @var array $shipping */
-        $shipping = $sAdmin->sGetPremiumShippingcosts($country);
+        $shipping = $this->sAdmin->sGetPremiumShippingcosts($country);
 
         if ($shipping['value'] !== null && $shipping['value'] > 0) {
 
             /** @var array $shipmentMethod */
-            $shipmentMethod = $cmpShipping->getCartShippingMethod();
+            $shipmentMethod = $this->cmpShipping->getCartShippingMethod();
 
             $cart->setShipping($shipmentMethod['name'], (float)$shipping['value']);
         }
@@ -88,7 +118,7 @@ class ApplePayDirect implements ApplePayDirectInterface
     {
         /** @var string $controller */
         $controller = strtolower($request->getControllerName());
-        
+
         $country = 'DE'; # todo country, von wo?;
 
         $button = new ApplePayButton(
@@ -136,41 +166,39 @@ class ApplePayDirect implements ApplePayDirectInterface
     }
 
     /**
-     * @param \sAdmin $admin
-     * @return int|string
+     * @return Payment
      * @throws \Exception
      */
-    public function getPaymentMethodID(\sAdmin $admin)
+    public function getPaymentMethod()
     {
-        $means = $admin->sGetPaymentMeans();
+        $applePayDirect = $this->paymentMethodService->getPaymentMethod(
+            [
+                'name' => ApplePayDirectInterface::APPLEPAY_DIRECT_NAME,
+                'active' => true,
+            ]
+        );
 
-        foreach ($means as $paymentID => $payment) {
-
-            if ($payment['name'] === ApplePayDirectInterface::APPLEPAY_DIRECT_NAME) {
-                return $paymentID;
-            }
+        if ($applePayDirect instanceof Payment) {
+            return $applePayDirect;
         }
 
         throw new \Exception('Apple Pay Direct Payment not found');
     }
 
     /**
-     * @param \sAdmin $admin
-     * @return int|string
-     * @throws \Exception
+     * @param string $token
      */
-    public function getPaymentMethod(\sAdmin $admin)
+    public function setPaymentToken($token)
     {
-        $means = $admin->sGetPaymentMeans();
+        $this->session->offsetSet('MOLLIE_APPLEPAY_PAYENTTOKEN', $token);
+    }
 
-        foreach ($means as $paymentID => $payment) {
-
-            if ($payment['name'] === ApplePayDirectInterface::APPLEPAY_DIRECT_NAME) {
-                return $payment;
-            }
-        }
-
-        throw new \Exception('Apple Pay Direct Payment not found');
+    /**
+     * @return string
+     */
+    public function getPaymentToken()
+    {
+        return $this->session->offsetGet('MOLLIE_APPLEPAY_PAYENTTOKEN');
     }
 
 
@@ -179,32 +207,12 @@ class ApplePayDirect implements ApplePayDirectInterface
      */
     private function isApplePayDirectAvailable(): bool
     {
-        /** @var PaymentMethodService $paymentMethodService */
-        $paymentMethodService = Shopware()->Container()->get('mollie_shopware.payment_method_service');
-
-        $applePayDirect = $paymentMethodService->getPaymentMethod(
-            [
-                'name' => ApplePayDirectInterface::APPLEPAY_DIRECT_NAME,
-                'active' => true,
-            ]
-        );
-
-        return ($applePayDirect instanceof Payment);
+        try {
+            $this->getPaymentMethod();
+            return true;
+        } catch (\Exception $ex) {
+            return false;
+        }
     }
 
-    /**
-     * @param $token
-     */
-    public function setPaymentToken($token)
-    {
-        Shopware()->Session()->offsetSet('MOLLIE_APPLEPAY_PAYENTTOKEN', $token);
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getPaymentToken()
-    {
-        return Shopware()->Session()->offsetGet('MOLLIE_APPLEPAY_PAYENTTOKEN');
-    }
 }

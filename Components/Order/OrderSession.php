@@ -4,6 +4,10 @@ namespace MollieShopware\Components\Order;
 
 use ArrayObject;
 use Enlight_Components_Session_Namespace;
+use Shopware\Bundle\StoreFrontBundle\Gateway\PaymentGatewayInterface;
+use Shopware\Bundle\StoreFrontBundle\Struct\ShopContext;
+use Shopware\Components\Compatibility\LegacyStructConverter;
+use Shopware\Models\Payment\Payment;
 use Shopware_Controllers_Frontend_Checkout;
 
 /**
@@ -13,26 +17,49 @@ class OrderSession
 {
 
     /**
+     * @var LegacyStructConverter
+     */
+    private $legacyStructConverter;
+
+    /**
+     * @var PaymentGatewayInterface
+     */
+    private $paymentGateway;
+
+    /**
      *
      * @var Enlight_Components_Session_Namespace
      */
     private $session;
 
-
     /**
+     * @param LegacyStructConverter $legacyStructConverter
+     * @param PaymentGatewayInterface $paymentGateway
      * @param Enlight_Components_Session_Namespace $session
      */
-    public function __construct(Enlight_Components_Session_Namespace $session)
+    public function __construct(LegacyStructConverter $legacyStructConverter, PaymentGatewayInterface $paymentGateway, Enlight_Components_Session_Namespace $session)
     {
+        $this->legacyStructConverter = $legacyStructConverter;
+        $this->paymentGateway = $paymentGateway;
         $this->session = $session;
     }
 
+
     /**
      * @param Shopware_Controllers_Frontend_Checkout $checkoutController
-     * @param array $paymentMethod
+     * @param Payment $paymentMethod
+     * @param ShopContext $shopContext
      */
-    public function prepareOrderSession(Shopware_Controllers_Frontend_Checkout $checkoutController, array $paymentMethod)
+    public function prepareOrderSession(Shopware_Controllers_Frontend_Checkout $checkoutController, Payment $payment, ShopContext $shopContext)
     {
+        # convert our shopware payment
+        # to a storefront payment method, which allows us to use the
+        # legacy struct converter, because we need that ARRAY in the end ;)
+        $storefrontPaymentMethods = $this->paymentGateway->getList(array($payment->getId()), $shopContext);
+        $paymentMethod = $storefrontPaymentMethods[$payment->getId()];
+        $arrayPaymentMethod = $this->legacyStructConverter->convertPaymentStruct($paymentMethod);
+
+
         $basket = $checkoutController->getBasket(false);
 
         # the main order variables is the basket, yes
@@ -50,8 +77,8 @@ class OrderSession
 
         # make sure we always use "apple pay direct"
         # for the order we create
-        $sOrderVariables['sUserData'] ['additional']['user']['paymentID'] = $paymentMethod['id'];
-        $sOrderVariables['sUserData'] ['additional']['payment'] = $paymentMethod;
+        $sOrderVariables['sUserData'] ['additional']['user']['paymentID'] = $paymentMethod->getId();
+        $sOrderVariables['sUserData'] ['additional']['payment'] = $arrayPaymentMethod;
 
         # finish our variables (shopware default)
         $sOrderVariables = new ArrayObject($sOrderVariables, ArrayObject::ARRAY_AS_PROPS);
