@@ -12,7 +12,9 @@ use Mollie\Api\Resources\BaseCollection;
 use Mollie\Api\Resources\Method;
 use Mollie\Api\Resources\MethodCollection;
 use Mollie\Api\Types\PaymentMethod;
+use MollieShopware\Components\ApplePayDirect\ApplePayDirectInterface;
 use MollieShopware\Components\Helpers\LogHelper;
+use Shopware\Components\Api\Resource\PaymentMethods;
 use Shopware\Components\Model\ModelManager;
 use Shopware\Components\Plugin\PaymentInstaller;
 use Shopware\Models\Payment\Payment;
@@ -151,9 +153,11 @@ class PaymentMethodService
                 $method[self::PAYMENT_METHOD_DESCRIPTION] = (string)$existingMethod->getDescription();
                 $method[self::PAYMENT_METHOD_POSITION] = $existingMethod->getPosition();
                 $method[self::PAYMENT_METHOD_SURCHARGE] = $existingMethod->getSurcharge();
-            } else {
-                // make sure new payment methods are not accidentally activated
-                // when being installed
+            }
+
+            // new payment methods are all activated
+            // but not apple pay direct, that wouldnt be good in the storefront ;)
+            if ($method[self::PAYMENT_METHOD_NAME] === ApplePayDirectInterface::APPLEPAY_DIRECT_NAME) {
                 $method[self::PAYMENT_METHOD_ACTIVE] = 0;
             }
 

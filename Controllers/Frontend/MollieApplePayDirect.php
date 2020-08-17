@@ -9,6 +9,7 @@ use MollieShopware\Components\Logger;
 use MollieShopware\Components\Order\OrderSession;
 use MollieShopware\Components\Shipping\Shipping;
 use MollieShopware\Traits\MollieApiClientTrait;
+use Shopware\Bundle\StoreFrontBundle\Struct\ShopContext;
 use Shopware\Components\ContainerAwareEventManager;
 use Shopware\Components\CSRFWhitelistAware;
 
@@ -36,6 +37,21 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
      */
     private $shipping;
 
+    /**
+     * @var OrderSession
+     */
+    private $orderSession;
+
+    /**
+     * @var ShopContext
+     */
+    private $shopContext;
+
+    /**
+     * @var \MollieShopware\Components\Account\Account
+     */
+    private $account;
+
 
     /**
      * @return string[]
@@ -60,6 +76,15 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
         $this->eventManager = Shopware()->Container()->get('events');
         $this->applePay = Shopware()->Container()->get('mollie_shopware.applepay_direct_service');
         $this->shipping = Shopware()->Container()->get('mollie_shopware.components.shipping');
+        $this->orderSession = Shopware()->Container()->get('mollie_shopware.components.order_session');
+        $this->shopContext = Shopware()->Container()->get('shopware_storefront.context_service')->getShopContext();
+
+        $this->account = new MollieShopware\Components\Account\Account(
+            $this->admin,
+            $this->session,
+            Shopware()->Container()->get('passwordencoder'),
+            Shopware()->Container()->get('mollie_shopware.components.apple_pay_direct.gateway.dbal.register_guest_customer_gateway')
+        );
     }
 
     /**
@@ -329,14 +354,8 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
                 throw new Exception('No Country found for code ' . $countryCode);
             }
 
-            $account = new MollieShopware\Components\Account\Account(
-                $this->admin,
-                $this->session,
-                $this->container->get('passwordencoder'),
-                $this->container->get('mollie_shopware.components.apple_pay_direct.gateway.dbal.register_guest_customer_gateway')
-            );
 
-            $account->createGuestAccount(
+            $this->account->createGuestAccount(
                 $email,
                 $firstname,
                 $lastname,
@@ -348,7 +367,7 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
 
             # now load the guest account
             # and set the id as "current" user for the next request
-            $guest = $account->getGuestAccount($email);
+            $guest = $this->account->getGuestAccount($email);
             $this->session->offsetSet('sUserId', $guest['id']);
 
             # save our payment token
@@ -385,15 +404,14 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
         try {
 
             $this->loadServices();
-            
+
             Shopware()->Plugins()->Controller()->ViewRenderer()->setNoRender();
 
-            $orderSession = Shopware()->Container()->get('mollie_shopware.components.order_session');
-
-            /** @var \Shopware\Bundle\StoreFrontBundle\Struct\ShopContext $context */
-            $context = $this->container->get('shopware_storefront.context_service')->getShopContext();
-
-            $orderSession->prepareOrderSession($this, $this->applePay->getPaymentMethod(), $context);
+            $this->orderSession->prepareOrderSession(
+                $this,
+                $this->applePay->getPaymentMethod(),
+                $this->shopContext
+            );
 
             # redirect to our centralized mollie
             # direct controller action
