@@ -65,12 +65,26 @@ function initApplePay() {
                         }
                     ).done(function (data) {
                             data = JSON.parse(data);
-                            session.completeShippingContactSelection(
-                                ApplePaySession.STATUS_SUCCESS,
-                                data.shippingmethods,
-                                data.cart.total,
-                                data.cart.items
-                            );
+
+                            if (data.success) {
+                                session.completeShippingContactSelection(
+                                    ApplePaySession.STATUS_SUCCESS,
+                                    data.shippingmethods,
+                                    data.cart.total,
+                                    data.cart.items
+                                );
+                            } else {
+                                session.completeShippingContactSelection(
+                                    ApplePaySession.STATUS_FAILURE,
+                                    [],
+                                    {
+                                        label: "",
+                                        amount: 0,
+                                        pending: true
+                                    },
+                                    []
+                                );
+                            }
                         }
                     );
                 };
@@ -87,11 +101,24 @@ function initApplePay() {
                         }
                     ).done(function (data) {
                             data = JSON.parse(data);
-                            session.completeShippingMethodSelection(
-                                ApplePaySession.STATUS_SUCCESS,
-                                data.cart.total,
-                                data.cart.items
-                            );
+
+                            if (data.success) {
+                                session.completeShippingMethodSelection(
+                                    ApplePaySession.STATUS_SUCCESS,
+                                    data.cart.total,
+                                    data.cart.items
+                                );
+                            } else {
+                                session.completeShippingMethodSelection(
+                                    ApplePaySession.STATUS_FAILURE,
+                                    {
+                                        label: "",
+                                        amount: 0,
+                                        pending: true
+                                    },
+                                    []
+                                );
+                            }
                         }
                     );
                 };

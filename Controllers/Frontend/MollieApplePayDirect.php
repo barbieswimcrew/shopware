@@ -90,7 +90,6 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
             /** @var Shipping $shipping */
             $shipping = Shopware()->Container()->get('mollie_shopware.components.shipping');
 
-            $shippingMethods = array();
 
             /** @var string $countryCode */
             $countryCode = $this->Request()->getParam('countryCode');
@@ -98,25 +97,27 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
             /** @var array $userCountry */
             $userCountry = $this->getCountry($countryCode);
 
-            if ($userCountry !== null) {
-
-                # set the current country in our session
-                # to the one, from the apple pay sheet.
-                $this->session->offsetSet('sCountry', $userCountry['id']);
-
-                /** @var int $applePayMethodId */
-                $applePayMethodId = $applePay->getPaymentMethod()->getId();
-
-                # get all available shipping methods
-                # for apple pay direct and our selected country
-                $dispatchMethods = $shipping->getShippingMethods($userCountry['id'], $applePayMethodId);
-
-                # now build an apple pay conform array
-                # of these shipping methods
-                $shippingMethods = $this->formatApplePayShippingMethods($dispatchMethods, $userCountry, $shipping);
+            if ($userCountry === null) {
+                throw new Exception('Country ' . $countryCode . ' is not supported and active.');
             }
 
+            # set the current country in our session
+            # to the one, from the apple pay sheet.
+            $this->session->offsetSet('sCountry', $userCountry['id']);
+
+            /** @var int $applePayMethodId */
+            $applePayMethodId = $applePay->getPaymentMethod()->getId();
+
+            # get all available shipping methods
+            # for apple pay direct and our selected country
+            $dispatchMethods = $shipping->getShippingMethods($userCountry['id'], $applePayMethodId);
+
+            # now build an apple pay conform array
+            # of these shipping methods
+            $shippingMethods = $this->formatApplePayShippingMethods($dispatchMethods, $userCountry, $shipping);
+
             $data = array(
+                'success' => true,
                 'cart' => $this->getCart()->toArray(),
                 'shippingmethods' => $shippingMethods,
             );
@@ -127,7 +128,11 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
         } catch (Throwable $ex) {
             Logger::log('error when loading apple pay shipping methods', $ex->getMessage(), $ex);
 
-            http_response_code(500);
+            $data = array(
+                'success' => false,
+            );
+
+            echo json_encode($data);
             die();
         }
     }
@@ -151,8 +156,8 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
             }
 
             $data = array(
+                'success' => false,
                 'cart' => $this->getCart()->toArray(),
-                'id' => $shippingIdentifier,
             );
 
             echo json_encode($data);
@@ -161,7 +166,11 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
         } catch (Throwable $ex) {
             Logger::log('error when setting apple pay shipping', $ex->getMessage(), $ex);
 
-            http_response_code(500);
+            $data = array(
+                'success' => false,
+            );
+
+            echo json_encode($data);
             die();
         }
     }
