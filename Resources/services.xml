@@ -6,6 +6,10 @@
 
     <services>
 
+
+        <!-- COMPONENTS -->
+        <!-- _______________________________________________________________________________________________________ -->
+
         <service id="mollie_shopware.components.shipping" class="MollieShopware\Components\Shipping\Shipping">
             <argument type="service" id="modules"/>
             <argument type="service" id="dbal_connection"/>
@@ -111,7 +115,10 @@
             <argument type="service" id="shopware_account.register_service"/>
         </service>
 
+
         <!-- Event Subscribers -->
+        <!-- _______________________________________________________________________________________________________ -->
+
         <service id="mollie_shopware.subscriber.frontend_view" class="MollieShopware\Subscriber\FrontendViewSubscriber">
             <tag name="shopware.event_subscriber"/>
         </service>

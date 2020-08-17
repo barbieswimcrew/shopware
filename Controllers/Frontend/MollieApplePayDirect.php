@@ -8,6 +8,7 @@ use MollieShopware\Components\Country\CountryIsoParser;
 use MollieShopware\Components\Logger;
 use MollieShopware\Components\Order\OrderSession;
 use MollieShopware\Components\Shipping\Shipping;
+use MollieShopware\Traits\MollieApiClientTrait;
 use Shopware\Components\ContainerAwareEventManager;
 use Shopware\Components\CSRFWhitelistAware;
 
@@ -16,6 +17,9 @@ use Shopware\Components\CSRFWhitelistAware;
  */
 class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Controllers_Frontend_Checkout implements CSRFWhitelistAware
 {
+
+    use MollieApiClientTrait;
+
 
     /**
      * @return string[]
@@ -177,7 +181,7 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
                 array()
             );
 
-            
+
             if (!empty($shippingIdentifier)) {
                 $shipping = Shopware()->Container()->get('mollie_shopware.components.shipping');
                 $shipping->setCartShippingMethodID($shippingIdentifier);
@@ -385,37 +389,6 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
             http_response_code(500);
             die();
         }
-    }
-
-    /**
-     * # todo ist duplicate mit Mollie.php Controller
-     * @param int $shopId
-     *
-     * @return \Mollie\Api\MollieApiClient
-     * @throws Exception
-     */
-    private function getMollieApi($shopId = null)
-    {
-        /** @var MollieApiClient $apiClient */
-        $apiClient = null;
-
-        /** @var \MollieShopware\Components\MollieApiFactory $apiFactory */
-        $apiFactory = Shopware()->Container()->get('mollie_shopware.api_factory');
-
-        if ($apiFactory !== null) {
-            try {
-                $apiClient = $apiFactory->create($shopId);
-            } catch (ApiException $e) {
-                Logger::log(
-                    'error',
-                    'Could not create an API client.',
-                    $e,
-                    true
-                );
-            }
-        }
-
-        return $apiClient;
     }
 
     /**

@@ -11,11 +11,15 @@ use MollieShopware\Components\Notifier;
 use MollieShopware\Components\Services\PaymentService;
 use MollieShopware\Models\Transaction;
 use MollieShopware\Models\TransactionRepository;
+use MollieShopware\Traits\MollieApiClientTrait;
 use Shopware\Models\Order\Order;
 use Shopware\Models\Order\Status;
 
 class Shopware_Controllers_Frontend_Mollie extends AbstractPaymentController
 {
+
+    use MollieApiClientTrait;
+
     /**
      * Whitelist webhookAction from CSRF protection
      *
@@ -1437,33 +1441,4 @@ class Shopware_Controllers_Frontend_Mollie extends AbstractPaymentController
         return Shopware()->container()->get('mollie_shopware.config');
     }
 
-    /**
-     * @param int $shopId
-     *
-     * @return \Mollie\Api\MollieApiClient
-     * @throws Exception
-     */
-    private function getMollieApi($shopId = null)
-    {
-        /** @var MollieApiClient $apiClient */
-        $apiClient = null;
-
-        /** @var \MollieShopware\Components\MollieApiFactory $apiFactory */
-        $apiFactory = Shopware()->Container()->get('mollie_shopware.api_factory');
-
-        if ($apiFactory !== null) {
-            try {
-                $apiClient = $apiFactory->create($shopId);
-            } catch (ApiException $e) {
-                Logger::log(
-                    'error',
-                    'Could not create an API client.',
-                    $e,
-                    true
-                );
-            }
-        }
-
-        return $apiClient;
-    }
 }
