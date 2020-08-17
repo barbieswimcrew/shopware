@@ -51,7 +51,7 @@ class ApplePayDirect implements ApplePayDirectInterface
                 $item['ordernumber'],
                 $item['articlename'],
                 (int)$item['quantity'],
-                $item['price']
+                (float)$item['priceNumeric']
             );
         }
 
@@ -66,7 +66,6 @@ class ApplePayDirect implements ApplePayDirectInterface
                 (float)$shipping['value']
             );
         }
-
 
         # if we are on PDP then our apple pay label and amount
         # is the one from our article
@@ -83,7 +82,10 @@ class ApplePayDirect implements ApplePayDirectInterface
     public function addButtonStatus(Enlight_Controller_Request_Request $request, Enlight_View $view, Shop $shop)
     {
         /** @var string $controller */
-        $controller = $request->getControllerName();
+        $controller = strtolower($request->getControllerName());
+
+        /** @var string $action */
+        $action = $request->getActionName();
 
         $country = 'DE'; # todo country, von wo?;
 
@@ -93,11 +95,9 @@ class ApplePayDirect implements ApplePayDirectInterface
             $shop->getCurrency()->getCurrency()
         );
 
-        switch (strtolower($controller)) {
-            case 'detail':
-                $vars = $view->getAssign();
-                $button->setItemMode($vars["sArticle"]["ordernumber"]);
-                break;
+        if ($controller === 'detail') {
+            $vars = $view->getAssign();
+            $button->setItemMode($vars["sArticle"]["ordernumber"]);
         }
 
         $view->assign(self::KEY_MOLLIE_APPLEPAY_BUTTON, $button->toArray());

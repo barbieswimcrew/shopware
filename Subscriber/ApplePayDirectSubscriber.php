@@ -20,6 +20,7 @@ class ApplePayDirectSubscriber implements SubscriberInterface
             'Theme_Compiler_Collect_Plugin_Javascript' => 'onCollectJavascript',
             'Theme_Compiler_Collect_Plugin_Less' => 'onCollectLess',
             'Enlight_Controller_Action_PostDispatch_Frontend' => 'onFrontendPostDispatch',
+            'Enlight_Controller_Action_PostDispatch_Widget' => 'onFrontendPostDispatch',
             'Enlight_Controller_Action_PostDispatch_Frontend_Checkout' => 'onFrontendCheckoutPostDispatch',
         ];
     }
