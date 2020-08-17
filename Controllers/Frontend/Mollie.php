@@ -3,12 +3,11 @@
 use Mollie\Api\Exceptions\ApiException;
 use Mollie\Api\MollieApiClient;
 use Mollie\Api\Resources\Profile;
-use MollieShopware\Components\ApplePayDirect\ApplePayDirect;
 use MollieShopware\Components\ApplePayDirect\ApplePayDirectInterface;
+use MollieShopware\Components\Base\AbstractPaymentController;
+use MollieShopware\Components\Constants\PaymentStatus;
 use MollieShopware\Components\Logger;
 use MollieShopware\Components\Notifier;
-use MollieShopware\Components\Constants\PaymentStatus;
-use MollieShopware\Components\Base\AbstractPaymentController;
 use MollieShopware\Components\Services\PaymentService;
 use MollieShopware\Models\Transaction;
 use MollieShopware\Models\TransactionRepository;
