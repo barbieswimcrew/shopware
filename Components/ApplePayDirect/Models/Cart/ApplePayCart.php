@@ -17,7 +17,7 @@ class ApplePayCart
     /**
      * @var string
      */
-    private $country;
+    private $countryISO;
 
     /**
      * @var string
@@ -37,12 +37,12 @@ class ApplePayCart
 
     /**
      * @param $country
-     * @param $currency
+     * @param $currencyISO
      */
-    public function __construct($country, $currency)
+    public function __construct($country, $currencyISO)
     {
-        $this->country = $country;
-        $this->currency = $currency;
+        $this->countryISO = $country;
+        $this->currency = $currencyISO;
 
         $this->items = array();
     }
@@ -85,9 +85,9 @@ class ApplePayCart
     /**
      * @return string
      */
-    public function getCountry(): string
+    public function getCountryISO(): string
     {
-        return $this->country;
+        return $this->countryISO;
     }
 
     /**
@@ -137,7 +137,7 @@ class ApplePayCart
         $data = array(
             'label' => $this->label,
             'amount' => $this->prepareFloat($this->getAmount()),
-            'country' => $this->country,
+            'country' => $this->countryISO,
             'currency' => $this->currency,
             'items' => array(),
         );

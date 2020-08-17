@@ -8,6 +8,7 @@ use Mollie\Api\MollieApiClient;
 use MollieShopware\Components\ApplePayDirect\Models\Cart\ApplePayCart;
 use MollieShopware\Components\ApplePayDirect\Models\ApplePayButton;
 use MollieShopware\Components\Constants\PaymentMethod;
+use MollieShopware\Components\Country\CountryIsoParser;
 use MollieShopware\Components\Services\PaymentMethodService;
 use MollieShopware\Components\Shipping\Shipping;
 use Shopware\Models\Payment\Payment;
@@ -70,14 +71,16 @@ class ApplePayDirect implements ApplePayDirectInterface
 
     /**
      * @param Shop $shop
-     * @param $country
-     * @return mixed|ApplePayCart
+     * @param array $country
+     * @return mixed
      * @throws \Enlight_Exception
      */
     public function getApplePayCart(Shop $shop, $country)
     {
+        $isoParser = new CountryIsoParser();
+
         $cart = new ApplePayCart(
-            'DE', # todo country, von wo?
+            $isoParser->getISO($country),
             $shop->getCurrency()->getCurrency()
         );
 

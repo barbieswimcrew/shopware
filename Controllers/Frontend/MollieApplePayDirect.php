@@ -4,6 +4,7 @@ use Mollie\Api\Exceptions\ApiException;
 use Mollie\Api\MollieApiClient;
 use MollieShopware\Components\ApplePayDirect\ApplePayDirect;
 use MollieShopware\Components\ApplePayDirect\ApplePayDirectInterface;
+use MollieShopware\Components\Country\CountryIsoParser;
 use MollieShopware\Components\Logger;
 use MollieShopware\Components\Order\OrderSession;
 use MollieShopware\Components\Shipping\Shipping;
@@ -400,14 +401,15 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
 
         $foundCountry = null;
 
+        $isoParser = new CountryIsoParser();
+
         /** @var array $country */
         foreach ($countries as $country) {
-            if (array_key_exists('iso', $country) && strtolower($country['iso']) === strtolower($countryCode)) {
-                $foundCountry = $country;
-                break;
-            }
 
-            if (array_key_exists('countryiso', $country) && strtolower($country['countryiso']) === strtolower($countryCode)) {
+            /** @var string $iso */
+            $iso = $isoParser->getISO($country);
+
+            if (strtolower($iso) === strtolower($countryCode)) {
                 $foundCountry = $country;
                 break;
             }

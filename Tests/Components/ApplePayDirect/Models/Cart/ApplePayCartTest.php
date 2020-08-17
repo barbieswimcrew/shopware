@@ -18,7 +18,7 @@ class ApplePayCartTest extends TestCase
     {
         $cart = new ApplePayCart('NL', 'EUR');
 
-        $this->assertEquals('NL', $cart->getCountry());
+        $this->assertEquals('NL', $cart->getCountryISO());
     }
 
     /**
