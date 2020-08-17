@@ -147,8 +147,6 @@ class ApplePayCart
         # ADD SUBTOTAL
         # -----------------------------------------------------
         $data['items'][] = array(
-            # apple pay required
-            # -------------------------------
             'label' => 'SUBTOTAL',
             'type' => 'final',
             'amount' => $this->prepareFloat($this->getAmount()),
@@ -159,8 +157,6 @@ class ApplePayCart
         # -----------------------------------------------------
         if ($this->shipping instanceof ApplePayLineItem) {
             $data['items'][] = array(
-                # apple pay required
-                # -------------------------------
                 'label' => $this->shipping->getName(),
                 'type' => 'final',
                 'amount' => $this->prepareFloat($this->shipping->getPrice()),
