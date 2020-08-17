@@ -22,6 +22,22 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
 
 
     /**
+     * @var ContainerAwareEventManager $eventManager
+     */
+    private $eventManager;
+
+    /**
+     * @var ApplePayDirectInterface $applePay
+     */
+    private $applePay;
+
+    /**
+     * @var Shipping $shipping
+     */
+    private $shipping;
+
+
+    /**
      * @return string[]
      */
     public function getWhitelistedCSRFActions()
@@ -32,38 +48,50 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
         ];
     }
 
+
+    /**
+     * Our controller isn't created with XML services and DI.
+     * It all works different in Shopware 5,
+     * so we just inject this function in our actions to
+     * load all our services correctly.
+     */
+    private function loadServices()
+    {
+        $this->eventManager = Shopware()->Container()->get('events');
+        $this->applePay = Shopware()->Container()->get('mollie_shopware.applepay_direct_service');
+        $this->shipping = Shopware()->Container()->get('mollie_shopware.components.shipping');
+    }
+
     /**
      * This route adds the provided article
      * to the cart.
      * It will first create a snapshot (todo) of the current
      * cart, then it will delete it and only add our single product to it.
      *
-     * @throws Enlight_Event_Exception
-     * @throws Enlight_Exception
-     * @throws Zend_Db_Adapter_Exception
+     * @throws Exception
      */
     public function addProductAction()
     {
         try {
-            Shopware()->Plugins()->Controller()->ViewRenderer()->setNoRender();
 
-            $basket = $this->basket;
-            $admin = $this->admin;
+            $this->loadServices();
+
+            Shopware()->Plugins()->Controller()->ViewRenderer()->setNoRender();
 
             // delete the cart,
             // to make sure that only the selected product is transferred to Apple Pay
-            $basket->sDeleteBasket();
+            $this->basket->sDeleteBasket();
 
             $productNumber = $this->Request()->getParam('number');
             $productQuantity = $this->Request()->getParam('quantity');
 
-            $basket->sAddArticle($productNumber, $productQuantity);
+            $this->basket->sAddArticle($productNumber, $productQuantity);
 
             // add potential discounts or surcharges to prevent an amount mismatch
             // on patching the new amount after the confirmation.
             // only necessary if the customer directly checks out from product detail page
-            $countries = $admin->sGetCountryList();
-            $admin->sGetPremiumShippingcosts(reset($countries));
+            $countries = $this->admin->sGetCountryList();
+            $this->admin->sGetPremiumShippingcosts(reset($countries));
 
             echo "";
             die();
@@ -87,13 +115,10 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
     public function getShippingsAction()
     {
         try {
+
+            $this->loadServices();
+
             Shopware()->Plugins()->Controller()->ViewRenderer()->setNoRender();
-
-            /** @var ApplePayDirectInterface $applePay */
-            $applePay = Shopware()->Container()->get('mollie_shopware.applepay_direct_service');
-            /** @var Shipping $shipping */
-            $shipping = Shopware()->Container()->get('mollie_shopware.components.shipping');
-
 
             /** @var string $countryCode */
             $countryCode = $this->Request()->getParam('countryCode');
@@ -110,23 +135,20 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
             $this->session->offsetSet('sCountry', $userCountry['id']);
 
             /** @var int $applePayMethodId */
-            $applePayMethodId = $applePay->getPaymentMethod()->getId();
+            $applePayMethodId = $this->applePay->getPaymentMethod()->getId();
 
             # get all available shipping methods
             # for apple pay direct and our selected country
-            $dispatchMethods = $shipping->getShippingMethods($userCountry['id'], $applePayMethodId);
+            $dispatchMethods = $this->shipping->getShippingMethods($userCountry['id'], $applePayMethodId);
 
             # now build an apple pay conform array
             # of these shipping methods
-            $shippingMethods = $this->formatApplePayShippingMethods($dispatchMethods, $userCountry, $shipping);
+            $shippingMethods = $this->formatApplePayShippingMethods($dispatchMethods, $userCountry);
 
-
-            /** @var ContainerAwareEventManager $eventManager */
-            $eventManager = Shopware()->Container()->get('events');
 
             # fire event about the shipping methods that
             # will be returned for the country
-            $eventManager->filter(
+            $this->eventManager->filter(
                 'Mollie_ApplePayDirect_getShippings_FilterResult',
                 $shippingMethods,
                 array(
@@ -165,16 +187,17 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
     public function setShippingAction()
     {
         try {
+
+            $this->loadServices();
+
             Shopware()->Plugins()->Controller()->ViewRenderer()->setNoRender();
 
             $shippingIdentifier = $this->Request()->getParam('identifier', '');
 
-            /** @var ContainerAwareEventManager $eventManager */
-            $eventManager = Shopware()->Container()->get('events');
 
             # fire event about the shipping methods that
             # will be set for the user
-            $eventManager->filter(
+            $this->eventManager->filter(
                 'Mollie_ApplePayDirect_setShipping_FilterResult',
                 $shippingIdentifier,
                 array()
@@ -182,8 +205,7 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
 
 
             if (!empty($shippingIdentifier)) {
-                $shipping = Shopware()->Container()->get('mollie_shopware.components.shipping');
-                $shipping->setCartShippingMethodID($shippingIdentifier);
+                $this->shipping->setCartShippingMethodID($shippingIdentifier);
             }
 
             $data = array(
@@ -214,6 +236,9 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
     public function restoreCartAction()
     {
         try {
+
+            $this->loadServices();
+
             Shopware()->Plugins()->Controller()->ViewRenderer()->setNoRender();
 
             $basket = $this->basket;
@@ -243,12 +268,11 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
      */
     public function createPaymentSessionAction()
     {
-        Shopware()->Plugins()->Controller()->ViewRenderer()->setNoRender();
-
         try {
 
-            /** @var ApplePayDirectInterface $applePay */
-            $applePay = Shopware()->Container()->get('mollie_shopware.applepay_direct_service');
+            Shopware()->Plugins()->Controller()->ViewRenderer()->setNoRender();
+
+            $this->loadServices();
 
             /** @var \Mollie\Api\MollieApiClient $mollieApi */
             $mollieApi = $this->getMollieApi();
@@ -256,7 +280,7 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
             $domain = Shopware()->Shop()->getHost();
             $validationUrl = (string)$this->Request()->getParam('validationUrl');
 
-            $response = $applePay->requestPaymentSession(
+            $response = $this->applePay->requestPaymentSession(
                 $mollieApi,
                 $domain,
                 $validationUrl
@@ -282,11 +306,11 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
      */
     public function startPaymentAction()
     {
-        Shopware()->Plugins()->Controller()->ViewRenderer()->setNoRender();
-
         try {
-            /** @var ApplePayDirectInterface $applePay */
-            $applePay = Shopware()->Container()->get('mollie_shopware.applepay_direct_service');
+
+            $this->loadServices();
+
+            Shopware()->Plugins()->Controller()->ViewRenderer()->setNoRender();
 
 
             $email = $this->Request()->getParam('email', '');
@@ -331,7 +355,7 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
             # that will be used when creating the
             # payment in the mollie controller action
             $paymentToken = $this->Request()->getParam('paymentToken', '');
-            $applePay->setPaymentToken($paymentToken);
+            $this->applePay->setPaymentToken($paymentToken);
 
             # redirect to our finish action
             # on that action the new guest user is fully loaded
@@ -360,17 +384,16 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
     {
         try {
 
+            $this->loadServices();
+            
             Shopware()->Plugins()->Controller()->ViewRenderer()->setNoRender();
-
-            /** @var ApplePayDirectInterface $applePay */
-            $applePay = Shopware()->Container()->get('mollie_shopware.applepay_direct_service');
 
             $orderSession = Shopware()->Container()->get('mollie_shopware.components.order_session');
 
             /** @var \Shopware\Bundle\StoreFrontBundle\Struct\ShopContext $context */
             $context = $this->container->get('shopware_storefront.context_service')->getShopContext();
 
-            $orderSession->prepareOrderSession($this, $applePay->getPaymentMethod(), $context);
+            $orderSession->prepareOrderSession($this, $this->applePay->getPaymentMethod(), $context);
 
             # redirect to our centralized mollie
             # direct controller action
@@ -395,10 +418,7 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
      */
     private function getCart()
     {
-        /** @var ApplePayDirectInterface $applePay */
-        $applePay = Shopware()->Container()->get('mollie_shopware.applepay_direct_service');
-
-        return $applePay->getApplePayCart(Shopware()->Shop());
+        return $this->applePay->getApplePayCart(Shopware()->Shop());
     }
 
     /**
@@ -433,12 +453,12 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
      * @param $userCountry
      * @return array
      */
-    private function formatApplePayShippingMethods(array $dispatchMethods, $userCountry, Shipping $shipping)
+    private function formatApplePayShippingMethods(array $dispatchMethods, $userCountry)
     {
         $selectedMethod = null;
         $otherMethods = array();
 
-        $selectedMethodID = $shipping->getCartShippingMethodID();
+        $selectedMethodID = $this->shipping->getCartShippingMethodID();
 
         /** @var array $method */
         foreach ($dispatchMethods as $method) {
@@ -448,14 +468,14 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
                     'identifier' => $method['id'],
                     'label' => $method['name'],
                     'detail' => $method['description'],
-                    'amount' => $shipping->getShippingMethodCosts($userCountry, $method['id'])
+                    'amount' => $this->shipping->getShippingMethodCosts($userCountry, $method['id'])
                 );
             } else {
                 $otherMethods[] = array(
                     'identifier' => $method['id'],
                     'label' => $method['name'],
                     'detail' => $method['description'],
-                    'amount' => $shipping->getShippingMethodCosts($userCountry, $method['id'])
+                    'amount' => $this->shipping->getShippingMethodCosts($userCountry, $method['id'])
                 );
             }
         }
@@ -467,7 +487,7 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
         } else {
             # set first one as default
             foreach ($otherMethods as $method) {
-                $shipping->setCartShippingMethodID($method['identifier']);
+                $this->shipping->setCartShippingMethodID($method['identifier']);
                 break;
             }
         }
