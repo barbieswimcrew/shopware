@@ -87,6 +87,8 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
 
             /** @var ApplePayDirectInterface $applePay */
             $applePay = Shopware()->Container()->get('mollie_shopware.applepay_direct_service');
+            /** @var Shipping $shipping */
+            $shipping = Shopware()->Container()->get('mollie_shopware.components.shipping');
 
             $shippingMethods = array();
 
@@ -97,12 +99,16 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
             $userCountry = $this->getCountry($countryCode);
 
             if ($userCountry !== null) {
+
+                # set the current country in our session
+                # to the one, from the apple pay sheet.
+                $this->session->offsetSet('sCountry', $userCountry['id']);
+
                 /** @var int $applePayMethodId */
                 $applePayMethodId = $applePay->getPaymentMethod()->getId();
 
                 # get all available shipping methods
                 # for apple pay direct and our selected country
-                $shipping = Shopware()->Container()->get('mollie_shopware.components.shipping');
                 $dispatchMethods = $shipping->getShippingMethods($userCountry['id'], $applePayMethodId);
 
                 # now build an apple pay conform array
@@ -383,12 +389,7 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
         /** @var ApplePayDirectInterface $applePay */
         $applePay = Shopware()->Container()->get('mollie_shopware.applepay_direct_service');
 
-        $cart = $applePay->getApplePayCart(
-            Shopware()->Shop(),
-            $this->getCountry('DE') # todo
-        );
-
-        return $cart;
+        return $applePay->getApplePayCart(Shopware()->Shop());
     }
 
     /**

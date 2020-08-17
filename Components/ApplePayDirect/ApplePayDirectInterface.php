@@ -21,10 +21,9 @@ interface ApplePayDirectInterface
 
     /**
      * @param Shop $shop
-     * @param $country
      * @return mixed
      */
-    public function getApplePayCart(Shop $shop, $country);
+    public function getApplePayCart(Shop $shop);
 
     /**
      * @param Enlight_Controller_Request_Request $request

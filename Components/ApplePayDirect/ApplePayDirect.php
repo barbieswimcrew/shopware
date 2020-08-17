@@ -71,18 +71,15 @@ class ApplePayDirect implements ApplePayDirectInterface
 
     /**
      * @param Shop $shop
-     * @param array $country
-     * @return mixed
+     * @return mixed|ApplePayCart
      * @throws \Enlight_Exception
      */
-    public function getApplePayCart(Shop $shop, $country)
+    public function getApplePayCart(Shop $shop)
     {
-        $isoParser = new CountryIsoParser();
+        $cart = new ApplePayCart();
 
-        $cart = new ApplePayCart(
-            $isoParser->getISO($country),
-            $shop->getCurrency()->getCurrency()
-        );
+
+        $taxes = 0;
 
         /** @var array $item */
         foreach ($this->sBasket->sGetBasketData()['content'] as $item) {
@@ -92,7 +89,15 @@ class ApplePayDirect implements ApplePayDirectInterface
                 (int)$item['quantity'],
                 (float)$item['priceNumeric']
             );
+
+            $taxes += (float)str_replace(',', '.', $item['tax']);
+
         }
+
+        # load our purchase country
+        # while we still show the apple pay sheet
+        # this is always handled through this variable.
+        $country = $this->sAdmin->sGetUserData()['additional']['country'];
 
         /** @var array $shipping */
         $shipping = $this->sAdmin->sGetPremiumShippingcosts($country);
@@ -103,7 +108,13 @@ class ApplePayDirect implements ApplePayDirectInterface
             $shipmentMethod = $this->cmpShipping->getCartShippingMethod();
 
             $cart->setShipping($shipmentMethod['name'], (float)$shipping['value']);
+
+
+            $taxes += ($shipping['brutto'] - $shipping['netto']);
         }
+
+
+        $cart->setTaxes("TAXES", $taxes);
 
         # if we are on PDP then our apple pay label and amount
         # is the one from our article
@@ -122,7 +133,12 @@ class ApplePayDirect implements ApplePayDirectInterface
         /** @var string $controller */
         $controller = strtolower($request->getControllerName());
 
-        $country = 'DE'; # todo country, von wo?;
+        $activeCountries = $this->sAdmin->sGetCountryList();
+        $firstCountry = array_shift($activeCountries);
+
+        $isoParser = new CountryIsoParser();
+
+        $country = $isoParser->getISO($firstCountry);
 
         $button = new ApplePayButton(
             $this->isApplePayDirectAvailable(),

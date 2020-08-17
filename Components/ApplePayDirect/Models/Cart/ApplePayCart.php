@@ -15,16 +15,6 @@ class ApplePayCart
     private $label;
 
     /**
-     * @var string
-     */
-    private $countryISO;
-
-    /**
-     * @var string
-     */
-    private $currency;
-
-    /**
      * @var ApplePayLineItem[]
      */
     private $items;
@@ -34,23 +24,22 @@ class ApplePayCart
      */
     private $shipping;
 
+    /**
+     * @var ApplePayLineItem
+     */
+    private $taxes;
 
     /**
-     * @param $country
-     * @param $currencyISO
      */
-    public function __construct($country, $currencyISO)
+    public function __construct()
     {
-        $this->countryISO = $country;
-        $this->currency = $currencyISO;
-
         $this->items = array();
     }
 
     /**
      * @return string
      */
-    public function getLabel(): string
+    public function getLabel()
     {
         return $this->label;
     }
@@ -58,7 +47,7 @@ class ApplePayCart
     /**
      * @param string $label
      */
-    public function setLabel(string $label): void
+    public function setLabel($label)
     {
         $this->label = $label;
     }
@@ -66,14 +55,9 @@ class ApplePayCart
     /**
      * @return float
      */
-    public function getAmount(): float
+    public function getAmount()
     {
-        $amount = 0;
-
-        /** @var ApplePayLineItem $item */
-        foreach ($this->items as $item) {
-            $amount += ($item->getQuantity() * $item->getPrice());
-        }
+        $amount = $this->getProductAmount();
 
         if ($this->shipping instanceof ApplePayLineItem) {
             $amount += $this->shipping->getPrice();
@@ -83,19 +67,18 @@ class ApplePayCart
     }
 
     /**
-     * @return string
+     * @return float|int
      */
-    public function getCountryISO(): string
+    private function getProductAmount()
     {
-        return $this->countryISO;
-    }
+        $amount = 0;
 
-    /**
-     * @return string
-     */
-    public function getCurrency(): string
-    {
-        return $this->currency;
+        /** @var ApplePayLineItem $item */
+        foreach ($this->items as $item) {
+            $amount += ($item->getQuantity() * $item->getPrice());
+        }
+
+        return $amount;
     }
 
     /**
@@ -127,6 +110,15 @@ class ApplePayCart
     }
 
     /**
+     * @param $name
+     * @param $price
+     */
+    public function setTaxes($name, $price)
+    {
+        $this->taxes = new ApplePayLineItem("TAXES", $name, 1, $price);
+    }
+
+    /**
      * @return array
      */
     public function toArray()
@@ -137,8 +129,6 @@ class ApplePayCart
         $data = array(
             'label' => $this->label,
             'amount' => $this->prepareFloat($this->getAmount()),
-            'country' => $this->countryISO,
-            'currency' => $this->currency,
             'items' => array(),
         );
 
@@ -149,7 +139,7 @@ class ApplePayCart
         $data['items'][] = array(
             'label' => 'SUBTOTAL',
             'type' => 'final',
-            'amount' => $this->prepareFloat($this->getAmount()),
+            'amount' => $this->prepareFloat($this->getProductAmount()),
         );
 
         # -----------------------------------------------------
@@ -162,6 +152,18 @@ class ApplePayCart
                 'amount' => $this->prepareFloat($this->shipping->getPrice()),
             );
         }
+
+        # -----------------------------------------------------
+        # ADD TAXES DATA
+        # -----------------------------------------------------
+        if ($this->taxes instanceof ApplePayLineItem) {
+            $data['items'][] = array(
+                'label' => $this->taxes->getName(),
+                'type' => 'final',
+                'amount' => $this->prepareFloat($this->taxes->getPrice()),
+            );
+        }
+
 
         # -----------------------------------------------------
         # TOTAL DATA

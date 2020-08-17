@@ -29,6 +29,7 @@ class ApplePayButton
      */
     private $addNumber;
 
+
     /**
      * @param bool $active
      * @param string $country
