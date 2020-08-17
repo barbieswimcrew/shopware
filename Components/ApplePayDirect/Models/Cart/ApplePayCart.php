@@ -137,7 +137,7 @@ class ApplePayCart
         # ADD SUBTOTAL
         # -----------------------------------------------------
         $data['items'][] = array(
-            'label' => 'SUBTOTAL',
+            'label' => 'SUBTOTAL',       # todo translation
             'type' => 'final',
             'amount' => $this->prepareFloat($this->getProductAmount()),
         );

@@ -109,11 +109,12 @@ class ApplePayDirect implements ApplePayDirectInterface
 
             $cart->setShipping($shipmentMethod['name'], (float)$shipping['value']);
 
-
+            # todo refactor + tests
             $taxes += ($shipping['brutto'] - $shipping['netto']);
         }
 
 
+        # todo translation
         $cart->setTaxes("TAXES", $taxes);
 
         # if we are on PDP then our apple pay label and amount
