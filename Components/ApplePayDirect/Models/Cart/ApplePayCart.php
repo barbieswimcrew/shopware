@@ -29,6 +29,11 @@ class ApplePayCart
      */
     private $items;
 
+    /**
+     * @var ApplePayLineItem
+     */
+    private $shipping;
+
 
     /**
      * @param $country
@@ -70,6 +75,10 @@ class ApplePayCart
             $amount += ($item->getQuantity() * $item->getPrice());
         }
 
+        if ($this->shipping instanceof ApplePayLineItem) {
+            $amount += $this->shipping->getPrice();
+        }
+
         return $amount;
     }
 
@@ -109,38 +118,58 @@ class ApplePayCart
     }
 
     /**
+     * @param $name
+     * @param $price
+     */
+    public function setShipping($name, $price)
+    {
+        $this->shipping = new ApplePayLineItem("SHIPPING", $name, 1, $price);
+    }
+
+    /**
      * @return array
      */
     public function toArray()
     {
+        # -----------------------------------------------------
+        # CART INIT-DATA
+        # -----------------------------------------------------
         $data = array(
-            # apple pay required
-            # -------------------------------
             'label' => $this->label,
             'amount' => $this->prepareFloat($this->getAmount()),
             'country' => $this->country,
             'currency' => $this->currency,
-            # additional
-            # -------------------------------
             'items' => array(),
         );
 
-        /** @var ApplePayLineItem $item */
-        foreach ($this->items as $item) {
 
+        # -----------------------------------------------------
+        # ADD SUBTOTAL
+        # -----------------------------------------------------
+        $data['items'][] = array(
+            # apple pay required
+            # -------------------------------
+            'label' => 'SUBTOTAL',
+            'type' => 'final',
+            'amount' => $this->prepareFloat($this->getAmount()),
+        );
+
+        # -----------------------------------------------------
+        # ADD SHIPPING DATA
+        # -----------------------------------------------------
+        if ($this->shipping instanceof ApplePayLineItem) {
             $data['items'][] = array(
                 # apple pay required
                 # -------------------------------
-                'label' => $item->getQuantity() . "x " . $item->getName(),
+                'label' => $this->shipping->getName(),
                 'type' => 'final',
-                'amount' => $this->prepareFloat($item->getPrice()),
-                # additional
-                # -------------------------------
-                'number' => $item->getNumber(),
-                'quantity' => $item->getQuantity(),
+                'amount' => $this->prepareFloat($this->shipping->getPrice()),
             );
         }
 
+        # -----------------------------------------------------
+        # TOTAL DATA
+        # -----------------------------------------------------
         $data['total'] = array(
             'label' => $this->label,
             'amount' => $this->prepareFloat($this->getAmount()),

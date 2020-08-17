@@ -9,6 +9,7 @@ use MollieShopware\Components\ApplePayDirect\Models\Cart\ApplePayCart;
 use MollieShopware\Components\ApplePayDirect\Models\ApplePayButton;
 use MollieShopware\Components\Constants\PaymentMethod;
 use MollieShopware\Components\Services\PaymentMethodService;
+use MollieShopware\Components\Shipping\Shipping;
 use Shopware\Models\Payment\Payment;
 use Shopware\Models\Shop\Shop;
 
@@ -32,13 +33,18 @@ class ApplePayDirect implements ApplePayDirectInterface
 
     /**
      * @param Shop $shop
-     * @param \sAdmin $country
+     * @param $country
      * @return mixed|ApplePayCart
+     * @throws \Enlight_Exception
      */
     public function getApplePayCart(Shop $shop, $country)
     {
+        /** @var Shipping $cmpShipping */
+        $cmpShipping = Shopware()->Container()->get('mollie_shopware.components.shipping');
+
         $sBasket = Shopware()->Modules()->Basket();
         $sAdmin = Shopware()->Modules()->Admin();
+
 
         $cart = new ApplePayCart(
             'DE', # todo country, von wo?
@@ -59,12 +65,11 @@ class ApplePayDirect implements ApplePayDirectInterface
         $shipping = $sAdmin->sGetPremiumShippingcosts($country);
 
         if ($shipping['value'] !== null && $shipping['value'] > 0) {
-            $cart->addItem(
-                'SHIP1',
-                'Shipping',
-                1,
-                (float)$shipping['value']
-            );
+
+            /** @var array $shipmentMethod */
+            $shipmentMethod = $cmpShipping->getCartShippingMethod();
+
+            $cart->setShipping($shipmentMethod['name'], (float)$shipping['value']);
         }
 
         # if we are on PDP then our apple pay label and amount
@@ -83,10 +88,7 @@ class ApplePayDirect implements ApplePayDirectInterface
     {
         /** @var string $controller */
         $controller = strtolower($request->getControllerName());
-
-        /** @var string $action */
-        $action = $request->getActionName();
-
+        
         $country = 'DE'; # todo country, von wo?;
 
         $button = new ApplePayButton(

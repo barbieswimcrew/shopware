@@ -2,6 +2,8 @@
 
 namespace MollieShopware\Components\Shipping;
 
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Query\QueryBuilder;
 use Enlight_Components_Session_Namespace;
 
 /**
@@ -15,19 +17,27 @@ class Shipping
     private $admin;
 
     /**
+     * @var Connection
+     */
+    private $connection;
+
+    /**
      * @var Enlight_Components_Session_Namespace
      */
     private $session;
 
     /**
-     * @param \sAdmin $admin
+     * @param $modules
+     * @param Connection $connection
      * @param Enlight_Components_Session_Namespace $session
      */
-    public function __construct(\sAdmin $admin, Enlight_Components_Session_Namespace $session)
+    public function __construct($modules, Connection $connection, Enlight_Components_Session_Namespace $session)
     {
-        $this->admin = $admin;
+        $this->admin = $modules->Admin();
+        $this->connection = $connection;
         $this->session = $session;
     }
+
 
     /**
      * @param $countryID
@@ -75,6 +85,26 @@ class Shipping
     public function getCartShippingMethodID()
     {
         return $this->session['sDispatch'];
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getCartShippingMethod()
+    {
+        $selectedID = $this->getCartShippingMethodID();
+
+        /** @var QueryBuilder $qb */
+        $qb = $this->connection->createQueryBuilder();
+
+        $qb->select('*')
+            ->from('s_premium_dispatch')
+            ->where($qb->expr()->eq('id', ':id'))
+            ->setParameter(':id', $selectedID);
+
+        $row = $qb->execute()->fetch();
+
+        return $row;
     }
 
 }
