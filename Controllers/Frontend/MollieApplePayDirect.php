@@ -8,6 +8,7 @@ use MollieShopware\Components\Country\CountryIsoParser;
 use MollieShopware\Components\Logger;
 use MollieShopware\Components\Order\OrderSession;
 use MollieShopware\Components\Shipping\Shipping;
+use Shopware\Components\ContainerAwareEventManager;
 use Shopware\Components\CSRFWhitelistAware;
 
 /**
@@ -116,6 +117,21 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
             # of these shipping methods
             $shippingMethods = $this->formatApplePayShippingMethods($dispatchMethods, $userCountry, $shipping);
 
+
+            /** @var ContainerAwareEventManager $eventManager */
+            $eventManager = Shopware()->Container()->get('events');
+
+            # fire event about the shipping methods that
+            # will be returned for the country
+            $eventManager->filter(
+                'Mollie_ApplePayDirect_getShippings_FilterResult',
+                $shippingMethods,
+                array(
+                    'country' => $countryCode
+                )
+            );
+
+
             $data = array(
                 'success' => true,
                 'cart' => $this->getCart()->toArray(),
@@ -150,6 +166,18 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
 
             $shippingIdentifier = $this->Request()->getParam('identifier', '');
 
+            /** @var ContainerAwareEventManager $eventManager */
+            $eventManager = Shopware()->Container()->get('events');
+
+            # fire event about the shipping methods that
+            # will be set for the user
+            $eventManager->filter(
+                'Mollie_ApplePayDirect_setShipping_FilterResult',
+                $shippingIdentifier,
+                array()
+            );
+
+            
             if (!empty($shippingIdentifier)) {
                 $shipping = Shopware()->Container()->get('mollie_shopware.components.shipping');
                 $shipping->setCartShippingMethodID($shippingIdentifier);
