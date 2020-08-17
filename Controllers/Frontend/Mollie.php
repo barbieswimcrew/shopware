@@ -4,6 +4,7 @@ use Mollie\Api\Exceptions\ApiException;
 use Mollie\Api\MollieApiClient;
 use Mollie\Api\Resources\Profile;
 use MollieShopware\Components\ApplePayDirect\ApplePayDirect;
+use MollieShopware\Components\ApplePayDirect\ApplePayDirectInterface;
 use MollieShopware\Components\Logger;
 use MollieShopware\Components\Notifier;
 use MollieShopware\Components\Constants\PaymentStatus;
@@ -191,6 +192,14 @@ class Shopware_Controllers_Frontend_Mollie extends AbstractPaymentController
             }
 
             return $this->redirectBack('Payment failed');
+
+        } finally {
+
+            /** @var ApplePayDirectInterface $applePay */
+            $applePay = Shopware()->Container()->get('mollie_shopware.applepay_direct_service');
+
+            # we always have to immediately clear the token in SUCCESS or FAILURE ways
+            $applePay->setPaymentToken('');
         }
     }
 
