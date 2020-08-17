@@ -219,8 +219,6 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
             $city = $this->Request()->getParam('city', '');
             $countryCode = $this->Request()->getParam('countryCode', '');
 
-            $phone = $this->Request()->getParam('phone', '');
-
             /** @var array $country */
             $country = $this->getCountry($countryCode);
 
@@ -242,8 +240,7 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
                 $street,
                 $zipcode,
                 $city,
-                $country['id'],
-                $phone
+                $country['id']
             );
 
             # now load the guest account
@@ -261,7 +258,13 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
             # on that action the new guest user is fully loaded
             # into our view variables and we can continue with
             # preparing the order in our session and finishing the checkout
-            $this->redirect('/MollieApplePayDirect/finishPayment');
+            $this->redirect(
+                [
+                    'controller' => 'MollieApplePayDirect',
+                    'action' => 'finishPayment',
+                ]
+            );
+
         } catch (Throwable $ex) {
 
             var_dump($ex->getMessage());
@@ -279,12 +282,17 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
         $applePay = Shopware()->Container()->get('mollie_shopware.applepay_direct_service');
 
         $orderSession = new OrderSession($this->session);
-        
+
         $orderSession->prepareOrderSession($this, $applePay->getPaymentMethod($this->admin));
 
         # redirect to our centralized mollie
         # direct controller action
-        $this->redirect('/Mollie/direct');
+        $this->redirect(
+            [
+                'controller' => 'Mollie',
+                'action' => 'direct',
+            ]
+        );
     }
 
     /**

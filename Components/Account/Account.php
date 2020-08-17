@@ -55,10 +55,10 @@ class Account
      * @param string $zip
      * @param string $city
      * @param int $countryID
-     * @param string $phone
+     *
      * @throws \Enlight_Exception
      */
-    public function createGuestAccount($email, $firstname, $lastname, $street, $zip, $city, $countryID, $phone)
+    public function createGuestAccount($email, $firstname, $lastname, $street, $zip, $city, $countryID)
     {
         $data['auth']['accountmode'] = '1';
 
@@ -79,9 +79,6 @@ class Account
         $data['billing']['city'] = $city;
         $data['billing']['stateID'] = '';
         $data['billing']['country'] = $countryID;
-
-        $data['billing']['phone'] = $phone;
-
 
         $paymentMeanId = $this->gwGuestCustomer->getPaymentMeanId();
 

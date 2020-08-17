@@ -20,9 +20,11 @@ function initApplePay() {
         var buttons = document.querySelectorAll(applePayButtonSelector);
 
         buttons.forEach(function (button) {
-            // Display the apple pay button
+
+            // display the apple pay button
             button.style.display = 'inline-block';
 
+            // add click event handlers
             button.addEventListener('click', function (e) {
 
                 const session = createApplePaySession(
@@ -32,11 +34,13 @@ function initApplePay() {
                     button.dataset.currency
                 );
 
-
+                // if button is in item mode
+                // then we first add that product to our cart
+                // for the quick checkout.
+                // if we are in normal mode, simply continue with
+                // the current cart
                 if (button.dataset.addproducturl) {
-
                     const comboQuantity = document.getElementById('sQuantity');
-
                     $.post(
                         button.dataset.addproducturl,
                         {
@@ -47,7 +51,6 @@ function initApplePay() {
                         }
                     );
                 }
-
 
                 /**
                  *
@@ -97,9 +100,13 @@ function initApplePay() {
                  *
                  */
                 session.oncancel = function () {
-                    $.get(
-                        button.dataset.restorecarturl
-                    );
+                    // only restore our cart
+                    // if we are in item-mode for the quick checkout
+                    if (button.dataset.addproducturl) {
+                        $.get(
+                            button.dataset.restorecarturl
+                        );
+                    }
                 };
 
                 /**
@@ -128,7 +135,8 @@ function initApplePay() {
                 session.onpaymentauthorized = function (e) {
                     let paymentToken = e.payment.token;
                     paymentToken = JSON.stringify(paymentToken);
-
+                    // now finish our payment by filling a form
+                    // and submitting it along with our payment token
                     finishPayment(button.dataset.checkouturl, paymentToken, e.payment);
                 };
 
@@ -150,10 +158,9 @@ function initApplePay() {
             countryCode: country,
             currencyCode: currency,
             requiredShippingContactFields: [
-                "postalAddress",
                 "name",
-                "phone",
-                "email"
+                "email",
+                "postalAddress"
             ],
             supportedNetworks: [
                 'amex',
@@ -203,7 +210,6 @@ function initApplePay() {
         createField('postalCode', payment.shippingContact.postalCode).appendTo($form);
         createField('city', payment.shippingContact.locality).appendTo($form);
         createField('countryCode', payment.shippingContact.countryCode).appendTo($form);
-        createField('phone', payment.shippingContact.phoneNumber).appendTo($form);
         // also add our payment token
         createField('paymentToken', paymentToken).appendTo($form);
 
@@ -212,6 +218,6 @@ function initApplePay() {
         $form.submit();
     }
 
-};
+}
 
 initApplePay();
