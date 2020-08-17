@@ -27,7 +27,6 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
     public function getWhitelistedCSRFActions()
     {
         return [
-            # todo, vl nicht so gut ha :D
             'startPayment',
             'finishPayment',
         ];
