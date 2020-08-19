@@ -154,6 +154,7 @@ class BasketService
      */
     function getBasketLines($userData = array())
     {
+        $discountItems = [];
         $items = [];
 
         try {
@@ -189,12 +190,25 @@ class BasketService
                     $vatAmount = $totalAmount * ($basketItem->getTaxRate() / ($basketItem->getTaxRate() + 100));
                 }
 
+                $articleName = $basketItem->getArticleName();
+                $orderType = $this->getOrderType($basketItem, $unitPrice);
+
+                // in case of duplicate discount items we have to ensure
+                // that the discount item will be recognized once
+                if ($orderType === 'discount') {
+                    if (in_array($articleName, $discountItems)) {
+                        continue;
+                    } else {
+                        $discountItems[] = $articleName;
+                    }
+                }
+
                 // build the order line array
                 $orderLine = [
                     'basket_item_id' => $basketItem->getId(),
                     'article_id' => $basketItem->getArticleId(),
-                    'name' => $basketItem->getArticleName(),
-                    'type' => $this->getOrderType($basketItem, $unitPrice),
+                    'name' => $articleName,
+                    'type' => $orderType,
                     'quantity' => $basketItem->getQuantity(),
                     'unit_price' => $unitPrice,
                     'net_price' => $netPrice,
