@@ -1,10 +1,12 @@
 <?php
 
 use Mollie\Api\Exceptions\ApiException;
+use MollieShopware\Components\Account\Account;
 use MollieShopware\Components\ApplePayDirect\ApplePayDirectFactory;
 use MollieShopware\Components\ApplePayDirect\ApplePayDirectHandlerInterface;
 use MollieShopware\Components\ApplePayDirect\ApplePayDirectSetup;
 use MollieShopware\Components\ApplePayDirect\Services\ApplePayFormatter;
+use MollieShopware\Components\BasketSnapshot\BasketSnapshot;
 use MollieShopware\Components\Config;
 use MollieShopware\Components\Country\CountryIsoParser;
 use MollieShopware\Components\Logger;
@@ -61,9 +63,14 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
     private $shopContext;
 
     /**
-     * @var \MollieShopware\Components\Account\Account
+     * @var Account
      */
     private $account;
+
+    /**
+     * @var BasketSnapshot
+     */
+    private $basketSnapshot;
 
 
     /**
@@ -93,7 +100,6 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
         $this->orderSession = Shopware()->Container()->get('mollie_shopware.components.order_session');
         $this->shopContext = Shopware()->Container()->get('shopware_storefront.context_service')->getShopContext();
         $this->applePaySetup = Shopware()->Container()->get('mollie_shopware.components.apple_pay_direct.setup');
-        $this->applePayFormatter = new ApplePayFormatter();
 
         /** @var ApplePayDirectFactory $applePayFactory */
         $applePayFactory = Shopware()->Container()->get('mollie_shopware.components.apple_pay_direct.factory');
@@ -106,12 +112,14 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
             Shopware()->Container()->get('passwordencoder'),
             Shopware()->Container()->get('mollie_shopware.components.apple_pay_direct.gateway.dbal.register_guest_customer_gateway')
         );
+
+        $this->applePayFormatter = new ApplePayFormatter();
+        $this->basketSnapshot = new BasketSnapshot($this->session);
     }
 
     /**
      * This route adds the provided article
-     * to the cart.
-     * It will first create a snapshot (todo) of the current
+     * to the cart. It will first create a snapshot of the current
      * cart, then it will delete it and only add our single product to it.
      *
      * @throws Exception
@@ -123,6 +131,10 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
             $this->loadServices();
 
             Shopware()->Plugins()->Controller()->ViewRenderer()->setNoRender();
+
+            // we start by creating a snapshot
+            // of our cart
+            $this->basketSnapshot->createSnapshot($this->basket);
 
             // delete the cart,
             // to make sure that only the selected product is transferred to Apple Pay
@@ -293,9 +305,7 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
 
             Shopware()->Plugins()->Controller()->ViewRenderer()->setNoRender();
 
-            $basket = $this->basket;
-
-            $basket->sDeleteBasket();
+            $this->basketSnapshot->restoreSnapshot($this->basket);
 
             echo "";
             die();

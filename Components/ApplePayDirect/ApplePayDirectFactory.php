@@ -39,10 +39,14 @@ class ApplePayDirectFactory
      */
     private $session;
 
-    /** @var MollieApiFactory $apiFactory */
+    /** 
+     * @var MollieApiFactory $apiFactory 
+     */
     private $apiFactory;
 
-    /** @var Config $mollieConfig */
+    /** 
+     * @var Config $mollieConfig 
+     */
     private $mollieConfig;
 
 
