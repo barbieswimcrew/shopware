@@ -5,8 +5,9 @@ namespace MollieShopware;
 use Enlight_Template_Manager;
 use Exception;
 use Mollie\Api\MollieApiClient;
-use MollieShopware\Components\ApplePayDirect\ApplePayDirect;
-use MollieShopware\Components\ApplePayDirect\ApplePayDirectInterface;
+use MollieShopware\Components\ApplePayDirect\ApplePayDirectHandler;
+use MollieShopware\Components\ApplePayDirect\ApplePayDirectHandlerInterface;
+use MollieShopware\Components\ApplePayDirect\ApplePayDirectSetup;
 use MollieShopware\Components\Config;
 use MollieShopware\Components\MollieApiFactory;
 use MollieShopware\Components\Services\PaymentMethodService;
@@ -27,6 +28,10 @@ use Shopware\Components\Plugin\Context\UninstallContext;
 
 class MollieShopware extends Plugin
 {
+    
+    public const PLUGIN_VERSION = '1.5.20';
+    
+    
     /**
      * Return Shopware events subscribed to
      */
@@ -243,8 +248,8 @@ class MollieShopware extends Plugin
         }
 
         // download apple pay merchant domain verification file of mollie
-        /** @var ApplePayDirectInterface $applePay */
-        $applePay = new ApplePayDirect();
+        /** @var ApplePayDirectSetup $applePay */
+        $applePay = Shopware()->Container()->get('mollie_shopware.components.apple_pay_direct.setup');
         $applePay->downloadDomainAssociationFile(Shopware()->DocPath());
 
 

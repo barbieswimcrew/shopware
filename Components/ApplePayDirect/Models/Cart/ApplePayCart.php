@@ -34,6 +34,9 @@ class ApplePayCart
     public function __construct()
     {
         $this->items = array();
+
+        $this->shipping = null;
+        $this->taxes = null;
     }
 
     /**
@@ -53,6 +56,22 @@ class ApplePayCart
     }
 
     /**
+     * @return ApplePayLineItem
+     */
+    public function getShipping()
+    {
+        return $this->shipping;
+    }
+
+    /**
+     * @return ApplePayLineItem
+     */
+    public function getTaxes()
+    {
+        return $this->taxes;
+    }
+
+    /**
      * @return float
      */
     public function getAmount()
@@ -69,7 +88,7 @@ class ApplePayCart
     /**
      * @return float|int
      */
-    private function getProductAmount()
+    public function getProductAmount()
     {
         $amount = 0;
 
@@ -116,82 +135,6 @@ class ApplePayCart
     public function setTaxes($name, $price)
     {
         $this->taxes = new ApplePayLineItem("TAXES", $name, 1, $price);
-    }
-
-    /**
-     * @return array
-     */
-    public function toArray()
-    {
-        # -----------------------------------------------------
-        # CART INIT-DATA
-        # -----------------------------------------------------
-        $data = array(
-            'label' => $this->label,
-            'amount' => $this->prepareFloat($this->getAmount()),
-            'items' => array(),
-        );
-
-
-        # -----------------------------------------------------
-        # ADD SUBTOTAL
-        # -----------------------------------------------------
-        $data['items'][] = array(
-            'label' => 'SUBTOTAL',       # todo translation
-            'type' => 'final',
-            'amount' => $this->prepareFloat($this->getProductAmount()),
-        );
-
-        # -----------------------------------------------------
-        # ADD SHIPPING DATA
-        # -----------------------------------------------------
-        if ($this->shipping instanceof ApplePayLineItem) {
-            $data['items'][] = array(
-                'label' => $this->shipping->getName(),
-                'type' => 'final',
-                'amount' => $this->prepareFloat($this->shipping->getPrice()),
-            );
-        }
-
-        # -----------------------------------------------------
-        # ADD TAXES DATA
-        # -----------------------------------------------------
-        if ($this->taxes instanceof ApplePayLineItem) {
-            $data['items'][] = array(
-                'label' => $this->taxes->getName(),
-                'type' => 'final',
-                'amount' => $this->prepareFloat($this->taxes->getPrice()),
-            );
-        }
-
-
-        # -----------------------------------------------------
-        # TOTAL DATA
-        # -----------------------------------------------------
-        $data['total'] = array(
-            'label' => $this->label,
-            'amount' => $this->prepareFloat($this->getAmount()),
-            'type' => 'final',
-        );
-
-        return $data;
-    }
-
-    /**
-     * Attention! When json_encode is being used it will
-     * automatically display digits like this 23.9999998 instead of 23.99.
-     * This is done inside json_encode! So we need to prepare
-     * the value by rounding the number up to the number
-     * of decimals we find here!
-     *
-     * @param $value
-     * @return float
-     */
-    private function prepareFloat($value): float
-    {
-        $countDecimals = strlen(substr(strrchr($value, "."), 1));
-
-        return round($value, $countDecimals);
     }
 
 }

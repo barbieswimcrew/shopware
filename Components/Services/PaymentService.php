@@ -4,7 +4,7 @@ namespace MollieShopware\Components\Services;
 
 use Mollie\Api\Exceptions\ApiException;
 use Mollie\Api\Resources\Payment;
-use MollieShopware\Components\ApplePayDirect\ApplePayDirectInterface;
+use MollieShopware\Components\ApplePayDirect\ApplePayDirectFactory;
 use MollieShopware\Components\Constants\PaymentMethod;
 use MollieShopware\Components\Constants\PaymentStatus;
 use MollieShopware\Models\Transaction;
@@ -652,12 +652,13 @@ class PaymentService
 
     /**
      * @return string
+     * @throws ApiException
      */
     protected function getApplePayPaymentToken()
     {
-        /** @var ApplePayDirectInterface $service */
-        $service = Shopware()->Container()->get('mollie_shopware.applepay_direct_service');
-        return $service->getPaymentToken();
+        /** @var ApplePayDirectFactory $applePayFactory */
+        $applePayFactory = Shopware()->Container()->get('mollie_shopware.components.apple_pay_direct.factory');
+        return $applePayFactory->create()->getPaymentToken();
     }
 
     /**

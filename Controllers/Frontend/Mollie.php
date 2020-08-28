@@ -3,7 +3,8 @@
 use Mollie\Api\Exceptions\ApiException;
 use Mollie\Api\MollieApiClient;
 use Mollie\Api\Resources\Profile;
-use MollieShopware\Components\ApplePayDirect\ApplePayDirectInterface;
+use MollieShopware\Components\ApplePayDirect\ApplePayDirectFactory;
+use MollieShopware\Components\ApplePayDirect\ApplePayDirectHandlerInterface;
 use MollieShopware\Components\Base\AbstractPaymentController;
 use MollieShopware\Components\Constants\PaymentStatus;
 use MollieShopware\Components\Logger;
@@ -78,8 +79,7 @@ class Shopware_Controllers_Frontend_Mollie extends AbstractPaymentController
              *
              * @var \MollieShopware\Components\Services\PaymentService $paymentService
              */
-            $paymentService = $this->container
-                ->get('mollie_shopware.payment_service');
+            $paymentService = $this->container->get('mollie_shopware.payment_service');
 
             /**
              * Persist the basket from session to database, returning it's signature which
@@ -198,9 +198,12 @@ class Shopware_Controllers_Frontend_Mollie extends AbstractPaymentController
 
         } finally {
 
-            /** @var ApplePayDirectInterface $applePay */
-            $applePay = Shopware()->Container()->get('mollie_shopware.applepay_direct_service');
-
+            /** @var ApplePayDirectFactory $applePayFactory */
+            $applePayFactory = Shopware()->Container()->get('mollie_shopware.components.apple_pay_direct.factory');
+            
+            /** @var ApplePayDirectHandlerInterface $applePay */
+            $applePay = $applePayFactory->create();
+            
             # we always have to immediately clear the token in SUCCESS or FAILURE ways
             $applePay->setPaymentToken('');
         }

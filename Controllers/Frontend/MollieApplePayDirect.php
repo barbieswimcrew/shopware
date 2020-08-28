@@ -1,11 +1,14 @@
 <?php
 
 use Mollie\Api\Exceptions\ApiException;
-use Mollie\Api\MollieApiClient;
-use MollieShopware\Components\ApplePayDirect\ApplePayDirect;
-use MollieShopware\Components\ApplePayDirect\ApplePayDirectInterface;
+use MollieShopware\Components\ApplePayDirect\ApplePayDirectFactory;
+use MollieShopware\Components\ApplePayDirect\ApplePayDirectHandlerInterface;
+use MollieShopware\Components\ApplePayDirect\ApplePayDirectSetup;
+use MollieShopware\Components\ApplePayDirect\Services\ApplePayFormatter;
+use MollieShopware\Components\Config;
 use MollieShopware\Components\Country\CountryIsoParser;
 use MollieShopware\Components\Logger;
+use MollieShopware\Components\MollieApiFactory;
 use MollieShopware\Components\Order\OrderSession;
 use MollieShopware\Components\Shipping\Shipping;
 use MollieShopware\Traits\MollieApiClientTrait;
@@ -28,9 +31,19 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
     private $eventManager;
 
     /**
-     * @var ApplePayDirectInterface $applePay
+     * @var ApplePayDirectHandlerInterface $applePay
      */
     private $applePay;
+
+    /**
+     * @var ApplePayDirectSetup
+     */
+    private $applePaySetup;
+
+    /**
+     * @var ApplePayFormatter
+     */
+    private $applePayFormatter;
 
     /**
      * @var Shipping $shipping
@@ -70,14 +83,22 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
      * It all works different in Shopware 5,
      * so we just inject this function in our actions to
      * load all our services correctly.
+     *
+     * @throws ApiException
      */
     private function loadServices()
     {
         $this->eventManager = Shopware()->Container()->get('events');
-        $this->applePay = Shopware()->Container()->get('mollie_shopware.applepay_direct_service');
         $this->shipping = Shopware()->Container()->get('mollie_shopware.components.shipping');
         $this->orderSession = Shopware()->Container()->get('mollie_shopware.components.order_session');
         $this->shopContext = Shopware()->Container()->get('shopware_storefront.context_service')->getShopContext();
+        $this->applePaySetup = Shopware()->Container()->get('mollie_shopware.components.apple_pay_direct.setup');
+        $this->applePayFormatter = new ApplePayFormatter();
+
+        /** @var ApplePayDirectFactory $applePayFactory */
+        $applePayFactory = Shopware()->Container()->get('mollie_shopware.components.apple_pay_direct.factory');
+
+        $this->applePay = $applePayFactory->create();
 
         $this->account = new MollieShopware\Components\Account\Account(
             $this->admin,
@@ -143,6 +164,7 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
 
             $this->loadServices();
 
+
             Shopware()->Plugins()->Controller()->ViewRenderer()->setNoRender();
 
             /** @var string $countryCode */
@@ -160,7 +182,7 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
             $this->session->offsetSet('sCountry', $userCountry['id']);
 
             /** @var int $applePayMethodId */
-            $applePayMethodId = $this->applePay->getPaymentMethod()->getId();
+            $applePayMethodId = $this->applePaySetup->getPaymentMethod()->getId();
 
             # get all available shipping methods
             # for apple pay direct and our selected country
@@ -182,9 +204,12 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
             );
 
 
+            $cart = $this->applePay->getApplePayCart(Shopware()->Shop());
+
+
             $data = array(
                 'success' => true,
-                'cart' => $this->getCart()->toArray(),
+                'cart' => $this->applePayFormatter->formatCart($cart),
                 'shippingmethods' => $shippingMethods,
             );
 
@@ -233,9 +258,11 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
                 $this->shipping->setCartShippingMethodID($shippingIdentifier);
             }
 
+            $cart = $this->applePay->getApplePayCart(Shopware()->Shop());
+
             $data = array(
                 'success' => false,
-                'cart' => $this->getCart()->toArray(),
+                'cart' => $this->applePayFormatter->formatCart($cart),
             );
 
             echo json_encode($data);
@@ -295,21 +322,15 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
     {
         try {
 
-            Shopware()->Plugins()->Controller()->ViewRenderer()->setNoRender();
-
             $this->loadServices();
 
-            /** @var \Mollie\Api\MollieApiClient $mollieApi */
-            $mollieApi = $this->getMollieApi();
+            Shopware()->Plugins()->Controller()->ViewRenderer()->setNoRender();
 
             $domain = Shopware()->Shop()->getHost();
             $validationUrl = (string)$this->Request()->getParam('validationUrl');
 
-            $response = $this->applePay->requestPaymentSession(
-                $mollieApi,
-                $domain,
-                $validationUrl
-            );
+            /** @var string $response */
+            $response = $this->applePay->requestPaymentSession($domain, $validationUrl);
 
             echo $response;
 
@@ -409,7 +430,7 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
 
             $this->orderSession->prepareOrderSession(
                 $this,
-                $this->applePay->getPaymentMethod(),
+                $this->applePaySetup->getPaymentMethod(),
                 $this->shopContext
             );
 
@@ -429,14 +450,6 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
             http_response_code(500);
             die();
         }
-    }
-
-    /**
-     * @return mixed
-     */
-    private function getCart()
-    {
-        return $this->applePay->getApplePayCart(Shopware()->Shop());
     }
 
     /**
@@ -481,20 +494,16 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
         /** @var array $method */
         foreach ($dispatchMethods as $method) {
 
+            /** @var float $costs */
+            $costs = $this->shipping->getShippingMethodCosts($userCountry, $method['id']);
+
+            /** @var array $formatted */
+            $formatted = $this->applePayFormatter->formatApplePayShippingMethod($method, $costs);
+
             if ($selectedMethodID === $method['id']) {
-                $selectedMethod = array(
-                    'identifier' => $method['id'],
-                    'label' => $method['name'],
-                    'detail' => $method['description'],
-                    'amount' => $this->shipping->getShippingMethodCosts($userCountry, $method['id'])
-                );
+                $selectedMethod = $formatted;
             } else {
-                $otherMethods[] = array(
-                    'identifier' => $method['id'],
-                    'label' => $method['name'],
-                    'detail' => $method['description'],
-                    'amount' => $this->shipping->getShippingMethodCosts($userCountry, $method['id'])
-                );
+                $otherMethods[] = $formatted;
             }
         }
 

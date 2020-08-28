@@ -6,14 +6,20 @@ require_once __DIR__ . '/../Client/vendor/autoload.php';
 
 use Mollie\Api\Exceptions\ApiException;
 use Mollie\Api\MollieApiClient;
+use MollieShopware\MollieShopware;
 
 class MollieApiFactory
 {
-    /** @var \MollieShopware\Components\Config */
+    /**
+     * @var \MollieShopware\Components\Config
+     */
     protected $config;
 
-    /** @var MollieApiClient */
+    /**
+     * @var MollieApiClient
+     */
     protected $apiClient;
+
 
     /**
      * MollieApiFactory constructor
@@ -25,50 +31,89 @@ class MollieApiFactory
         $this->config = $config;
     }
 
+
     /**
-     * Create the API client
-     *
      * @param null $shopId
-     *
      * @return MollieApiClient
-     *
      * @throws ApiException
-     * @throws \Mollie\Api\Exceptions\IncompatiblePlatform
+     */
+    public function createLiveClient($shopId = null)
+    {
+        // set the configuration for the shop
+        $this->config->setShop($shopId);
+
+        return $this->buildApiClient(
+            $this->config->apiKey()
+        );
+    }
+
+    /**
+     * @param null $shopId
+     * @return MollieApiClient
+     * @throws ApiException
+     */
+    public function createTestClient($shopId = null)
+    {
+        // set the configuration for the shop
+        $this->config->setShop($shopId);
+
+        return $this->buildApiClient(
+            $this->config->getTestApiKey()
+        );
+    }
+
+    /**
+     * @param null $shopId
+     * @return MollieApiClient
      */
     public function create($shopId = null)
     {
         $this->requireDependencies();
 
+        // set the configuration for the shop
+        $this->config->setShop($shopId);
+
         if (empty($this->apiClient)) {
-            $this->apiClient = new MollieApiClient();
-
             try {
-                // add platform name and version
-                $this->apiClient->addVersionString(
-                    'Shopware/' .
-                    Shopware()->Container()->getParameter('shopware.release.version')
-                );
-
-                // add plugin name and version
-                $this->apiClient->addVersionString(
-                    'MollieShopware/1.5.16'
-                );
-            }
-            catch (\Exception $ex) {
+                $this->apiClient = $this->buildApiClient($this->config->apiKey());
+            } catch (\Exception $ex) {
                 //
             }
         }
 
-        // set the configuration for the shop
-        $this->config->setShop($shopId);
-
-        // set the api key based on the configuration
-        $this->apiClient->setApiKey($this->config->apiKey());
-
         return $this->apiClient;
     }
 
-    public function requireDependencies()
+    /**
+     * @param $apiKey
+     * @return MollieApiClient
+     * @throws ApiException
+     */
+    private function buildApiClient($apiKey)
+    {
+        $client = new MollieApiClient();
+
+        // add platform name and version
+        $client->addVersionString(
+            'Shopware/' .
+            Shopware()->Container()->getParameter('shopware.release.version')
+        );
+
+        // add plugin name and version
+        $client->addVersionString(
+            'MollieShopware/' . MollieShopware::PLUGIN_VERSION
+        );
+
+        // set the api key based on the configuration
+        $client->setApiKey($apiKey);
+
+        return $client;
+    }
+
+    /**
+     *
+     */
+    private function requireDependencies()
     {
         // Load composer libraries
         if (file_exists(__DIR__ . '/../Client/vendor/scoper-autoload.php')) {
@@ -95,4 +140,5 @@ class MollieApiFactory
             require_once __DIR__ . '/../Client/vendor/mollie/mollie-api-php/src/MollieApiClient.php';
         }
     }
+    
 }

@@ -6,8 +6,9 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Enlight\Event\SubscriberInterface;
 use Enlight_Event_EventArgs;
 use Enlight_View;
-use MollieShopware\Components\ApplePayDirect\ApplePayDirect;
-use MollieShopware\Components\ApplePayDirect\ApplePayDirectInterface;
+use MollieShopware\Components\ApplePayDirect\ApplePayDirectHandler;
+use MollieShopware\Components\ApplePayDirect\ApplePayDirectHandlerInterface;
+use MollieShopware\Components\ApplePayDirect\ApplePayDirectSetup;
 use MollieShopware\Components\Constants\PaymentMethod;
 use Shopware\Components\Theme\LessDefinition;
 
@@ -70,9 +71,8 @@ class ApplePayDirectSubscriber implements SubscriberInterface
         # add the apple pay direct data for our current view.
         # the data depends on our page.
         # this might either be a product on PDP, or the full cart data
-        /** @var ApplePayDirectInterface $applePay */
-        $applePay = Shopware()->Container()->get('mollie_shopware.applepay_direct_service');
-
+        /** @var ApplePayDirectSetup $applePay */
+        $applePay = Shopware()->Container()->get('mollie_shopware.components.apple_pay_direct.setup');
         $applePay->addButtonStatus($request, $view, Shopware()->Shop());
     }
 
@@ -97,12 +97,13 @@ class ApplePayDirectSubscriber implements SubscriberInterface
     /**
      * Remove "Apple Pay Direct" payment method from sPayments to avoid
      * that a user will be able to choose this payment method in the checkout
+     *
      * @param array $sPayments
      */
     private function removeApplePayDirectFromPaymentMeans(array &$sPayments)
     {
         foreach ($sPayments as $index => $payment) {
-            if ($payment['name'] === ApplePayDirectInterface::APPLEPAY_DIRECT_NAME) {
+            if ($payment['name'] === ApplePayDirectHandlerInterface::APPLEPAY_DIRECT_NAME) {
                 unset($sPayments[$index]);
                 break;
             }

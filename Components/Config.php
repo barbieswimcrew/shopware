@@ -12,22 +12,32 @@ class Config
     const TRANSACTION_NUMBER_TYPE_MOLLIE = 'mollie';
     const TRANSACTION_NUMBER_TYPE_PAYMENT_METHOD = 'payment_method';
 
-    /** @var ConfigReader */
+    /**
+     * @var ConfigReader
+     */
     private $configReader;
 
-    /** @var int */
+    /**
+     * @var int
+     */
     private $shopId = null;
 
-    /** @var array */
+    /**
+     * @var array
+     */
     private $data = null;
 
-    /** @var ShopService */
+    /**
+     * @var ShopService
+     */
     private $shopService;
 
-    public function __construct(
-        ConfigReader $configReader,
-        ShopService $shopService
-    )
+
+    /**
+     * @param ConfigReader $configReader
+     * @param ShopService $shopService
+     */
+    public function __construct(ConfigReader $configReader, ShopService $shopService)
     {
         $this->configReader = $configReader;
         $this->shopService = $shopService;
@@ -98,7 +108,44 @@ class Config
      */
     public function apiKey()
     {
-        return $this->get('api-key');
+        /** @var string|null $key */
+        $key = $this->get('api-key');
+
+        if ($key === null) {
+            return "";
+        }
+
+        return $key;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTestApiKey()
+    {
+        /** @var string|null $key */
+        $key = $this->get('test-api-key');
+
+        if ($key === null) {
+            return "";
+        }
+
+        return $key;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isTestmodeActive()
+    {
+        /** @var bool|null $isActive */
+        $isActive = $this->get('test_mode_active');
+
+        if ($isActive === null) {
+            return false;
+        }
+
+        return $isActive;
     }
 
     /**
@@ -152,7 +199,7 @@ class Config
      */
     public function getTransactionNumberType()
     {
-        return (string) $this->get('transaction_number_type', self::TRANSACTION_NUMBER_TYPE_MOLLIE);
+        return (string)$this->get('transaction_number_type', self::TRANSACTION_NUMBER_TYPE_MOLLIE);
     }
 
     /**
@@ -200,7 +247,7 @@ class Config
      */
     public function getKlarnaShipOnStatus()
     {
-        return (int) $this->get('klarna_ship_on_status', \Shopware\Models\Order\Status::ORDER_STATE_COMPLETELY_DELIVERED);
+        return (int)$this->get('klarna_ship_on_status', \Shopware\Models\Order\Status::ORDER_STATE_COMPLETELY_DELIVERED);
     }
 
     /**
@@ -208,7 +255,7 @@ class Config
      */
     public function getShippedStatus()
     {
-        return (int) $this->get('klarna_shipped_status', -1);
+        return (int)$this->get('klarna_shipped_status', -1);
     }
 
     /**
@@ -232,7 +279,7 @@ class Config
      */
     public function enableCreditCardComponent()
     {
-        return (bool) $this->get('enable_credit_card_component', true);
+        return (bool)$this->get('enable_credit_card_component', true);
     }
 
     /**
@@ -240,7 +287,7 @@ class Config
      */
     public function enableCreditCardComponentStyling()
     {
-        return (bool) $this->get('enable_credit_card_component_styling', true);
+        return (bool)$this->get('enable_credit_card_component_styling', true);
     }
 
     /**
@@ -250,10 +297,10 @@ class Config
     {
         $userId = $this->get('mollie_shopware_user_id', null);
 
-        if ((string) $userId === '') {
+        if ((string)$userId === '') {
             return null;
         }
 
-        return (int) $userId;
+        return (int)$userId;
     }
 }
