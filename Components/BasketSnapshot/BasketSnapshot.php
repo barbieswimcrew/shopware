@@ -10,6 +10,11 @@ class BasketSnapshot
      */
     private $session;
 
+    /**
+     *
+     */
+    const SESSION_KEY = 'mollie-basket-snapshot';
+
 
     /**
      * BasketSnapshot constructor.
@@ -26,7 +31,7 @@ class BasketSnapshot
      */
     public function createSnapshot(\sBasket $basket)
     {
-
+        # todo
     }
 
     /**
@@ -34,7 +39,7 @@ class BasketSnapshot
      */
     public function restoreSnapshot(\sBasket $basket)
     {
-
+        # todo
     }
 
 }

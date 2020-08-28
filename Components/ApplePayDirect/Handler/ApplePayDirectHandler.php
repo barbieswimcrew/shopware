@@ -68,6 +68,11 @@ class ApplePayDirectHandler implements ApplePayDirectHandlerInterface
      */
     private $session;
 
+    /**
+     * @var \Enlight_Components_Snippet_Namespace $snippets
+     */
+    private $snippets;
+
 
     /**
      * ApplePayDirectHandler constructor.
@@ -80,8 +85,9 @@ class ApplePayDirectHandler implements ApplePayDirectHandlerInterface
      * @param Shipping $cmpShipping
      * @param PaymentMethodService $paymentMethodService
      * @param $session
+     * @param $snippets
      */
-    public function __construct(MollieApiClient $clientLive, MollieApiClient $clientTest, bool $isTestModeEnabled, $sAdmin, $sBasket, Shipping $cmpShipping, PaymentMethodService $paymentMethodService, $session)
+    public function __construct(MollieApiClient $clientLive, MollieApiClient $clientTest, bool $isTestModeEnabled, $sAdmin, $sBasket, Shipping $cmpShipping, PaymentMethodService $paymentMethodService, $session, $snippets)
     {
         $this->clientLive = $clientLive;
         $this->clientTest = $clientTest;
@@ -92,6 +98,9 @@ class ApplePayDirectHandler implements ApplePayDirectHandlerInterface
         $this->cmpShipping = $cmpShipping;
         $this->paymentMethodService = $paymentMethodService;
         $this->session = $session;
+
+        /** @var \Enlight_Components_Snippet_Namespace $ns */
+        $this->snippets = $snippets->getNamespace('frontend/MollieShopware/ApplePayDirect');
     }
 
 
@@ -138,8 +147,10 @@ class ApplePayDirectHandler implements ApplePayDirectHandlerInterface
         }
 
 
-        # todo translation
-        $cart->setTaxes("TAXES", $taxes);
+        $cart->setTaxes(
+            $this->snippets->get('lineItemLabelTaxes', 'TAXES'),
+            $taxes
+        );
 
         # if we are on PDP then our apple pay label and amount
         # is the one from our article

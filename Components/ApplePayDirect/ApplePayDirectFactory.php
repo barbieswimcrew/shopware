@@ -50,13 +50,20 @@ class ApplePayDirectFactory
     private $mollieConfig;
 
 
+private $snippets;
+
     /**
+     * ApplePayDirectFactory constructor.
+     *
      * @param $modules
      * @param Shipping $cmpShipping
      * @param PaymentMethodService $paymentMethodService
      * @param \Enlight_Components_Session_Namespace $session
+     * @param MollieApiFactory $apiFactory
+     * @param Config $config
+     * @param $snippets
      */
-    public function __construct($modules, Shipping $cmpShipping, PaymentMethodService $paymentMethodService, \Enlight_Components_Session_Namespace $session, MollieApiFactory $apiFactory, Config $config)
+    public function __construct($modules, Shipping $cmpShipping, PaymentMethodService $paymentMethodService, \Enlight_Components_Session_Namespace $session, MollieApiFactory $apiFactory, Config $config, $snippets)
     {
         $this->sAdmin = $modules->Admin();
         $this->sBasket = $modules->Basket();
@@ -67,6 +74,7 @@ class ApplePayDirectFactory
 
         $this->apiFactory = $apiFactory;
         $this->mollieConfig = $config;
+        $this->snippets = $snippets;
     }
 
     /**
@@ -83,7 +91,8 @@ class ApplePayDirectFactory
             $this->sBasket,
             $this->cmpShipping,
             $this->paymentMethodService,
-            $this->session
+            $this->session,
+            $this->snippets
         );
 
         return $applepay;
