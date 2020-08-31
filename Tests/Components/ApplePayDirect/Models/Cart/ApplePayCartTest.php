@@ -3,6 +3,7 @@
 namespace MollieShopware\Tests\Components\ApplePayDirect\Models\Cart;
 
 use MollieShopware\Components\ApplePayDirect\Models\Cart\ApplePayCart;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @copyright 2020 dasistweb GmbH (https://www.dasistweb.de)
