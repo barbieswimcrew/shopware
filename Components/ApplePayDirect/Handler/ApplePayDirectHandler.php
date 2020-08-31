@@ -2,19 +2,10 @@
 
 namespace MollieShopware\Components\ApplePayDirect\Handler;
 
-use Enlight_Controller_Request_Request;
-use Enlight_View;
 use Mollie\Api\MollieApiClient;
 use MollieShopware\Components\ApplePayDirect\ApplePayDirectHandlerInterface;
 use MollieShopware\Components\ApplePayDirect\Models\Cart\ApplePayCart;
-use MollieShopware\Components\ApplePayDirect\Models\ApplePayButton;
-use MollieShopware\Components\Constants\PaymentMethod;
-use MollieShopware\Components\Country\CountryIsoParser;
-use MollieShopware\Components\Services\PaymentMethodService;
 use MollieShopware\Components\Shipping\Shipping;
-use Shopware\Models\Payment\Payment;
-use Shopware\Models\Shop\Shop;
-use Shopware_Components_Modules;
 
 /**
  * @copyright 2020 dasistweb GmbH (https://www.dasistweb.de)
@@ -23,9 +14,11 @@ class ApplePayDirectHandler implements ApplePayDirectHandlerInterface
 {
 
     /**
-     *
+     * This is the key for the session entry
+     * that stores the payment token before
+     * finishing a new order
      */
-    const KEY_MOLLIE_APPLEPAY_BUTTON = 'sMollieApplePayDirectButton';
+    const KEY_SESSION_PAYMENTTOKEN = 'MOLLIE_APPLEPAY_PAYENTTOKEN';
 
 
     /**
@@ -46,32 +39,22 @@ class ApplePayDirectHandler implements ApplePayDirectHandlerInterface
     /**
      * @var \sAdmin
      */
-    private $sAdmin;
+    private $admin;
 
     /**
      * @var \sBasket
      */
-    private $sBasket;
+    private $basket;
 
     /**
-     * @var Shipping $cmpShipping
+     * @var Shipping $shipping
      */
-    private $cmpShipping;
-
-    /**
-     * @var PaymentMethodService $paymentMethodService
-     */
-    private $paymentMethodService;
+    private $shipping;
 
     /**
      * @var \Enlight_Components_Session_Namespace
      */
     private $session;
-
-    /**
-     * @var \Enlight_Components_Snippet_Namespace $snippets
-     */
-    private $snippets;
 
 
     /**
@@ -83,24 +66,17 @@ class ApplePayDirectHandler implements ApplePayDirectHandlerInterface
      * @param $sAdmin
      * @param $sBasket
      * @param Shipping $cmpShipping
-     * @param PaymentMethodService $paymentMethodService
-     * @param $session
-     * @param $snippets
+     * @param \Enlight_Components_Session_Namespace $session
      */
-    public function __construct(MollieApiClient $clientLive, MollieApiClient $clientTest, bool $isTestModeEnabled, $sAdmin, $sBasket, Shipping $cmpShipping, PaymentMethodService $paymentMethodService, $session, $snippets)
+    public function __construct(MollieApiClient $clientLive, MollieApiClient $clientTest, bool $isTestModeEnabled, $sAdmin, $sBasket, Shipping $cmpShipping, \Enlight_Components_Session_Namespace $session)
     {
         $this->clientLive = $clientLive;
         $this->clientTest = $clientTest;
         $this->isTestModeEnabled = $isTestModeEnabled;
 
-        $this->sAdmin = $sAdmin;
-        $this->sBasket = $sBasket;
-        $this->cmpShipping = $cmpShipping;
-        $this->paymentMethodService = $paymentMethodService;
-        $this->session = $session;
-
-        /** @var \Enlight_Components_Snippet_Namespace $ns */
-        $this->snippets = $snippets->getNamespace('frontend/MollieShopware/ApplePayDirect');
+        $this->admin = $sAdmin;
+        $this->basket = $sBasket;
+        $this->shipping = $cmpShipping;
     }
 
 
@@ -115,7 +91,7 @@ class ApplePayDirectHandler implements ApplePayDirectHandlerInterface
         $taxes = 0;
 
         /** @var array $item */
-        foreach ($this->sBasket->sGetBasketData()['content'] as $item) {
+        foreach ($this->basket->sGetBasketData()['content'] as $item) {
 
             $cart->addItem(
                 $item['ordernumber'],
@@ -130,15 +106,15 @@ class ApplePayDirectHandler implements ApplePayDirectHandlerInterface
         # load our purchase country
         # while we still show the apple pay sheet
         # this is always handled through this variable.
-        $country = $this->sAdmin->sGetUserData()['additional']['country'];
+        $country = $this->admin->sGetUserData()['additional']['country'];
 
         /** @var array $shipping */
-        $shipping = $this->sAdmin->sGetPremiumShippingcosts($country);
+        $shipping = $this->admin->sGetPremiumShippingcosts($country);
 
         if ($shipping['value'] !== null && $shipping['value'] > 0) {
 
             /** @var array $shipmentMethod */
-            $shipmentMethod = $this->cmpShipping->getCartShippingMethod();
+            $shipmentMethod = $this->shipping->getCartShippingMethod();
 
             $cart->setShipping($shipmentMethod['name'], (float)$shipping['value']);
 
@@ -178,7 +154,7 @@ class ApplePayDirectHandler implements ApplePayDirectHandlerInterface
      */
     public function setPaymentToken($token)
     {
-        $this->session->offsetSet('MOLLIE_APPLEPAY_PAYENTTOKEN', $token);
+        $this->session->offsetSet(self::KEY_SESSION_PAYMENTTOKEN, $token);
     }
 
     /**
@@ -186,7 +162,7 @@ class ApplePayDirectHandler implements ApplePayDirectHandlerInterface
      */
     public function getPaymentToken()
     {
-        return $this->session->offsetGet('MOLLIE_APPLEPAY_PAYENTTOKEN');
+        return $this->session->offsetGet(self::KEY_SESSION_PAYMENTTOKEN);
     }
 
 }

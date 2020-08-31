@@ -69,7 +69,7 @@ class ApplePayDirectSubscriber implements SubscriberInterface
         /** @var Enlight_View $view */
         $view = $args->getSubject()->View();
 
-        $buttonBuilder = Shopware()->Container()->get('mollie_shopware.components.apple_pay_direct.services.applepay_button_builder');
+        $buttonBuilder = Shopware()->Container()->get('mollie_shopware.components.apple_pay_direct.services.button_builder');
 
         # add the apple pay direct data for our current view.
         # the data depends on our page.

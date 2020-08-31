@@ -5,7 +5,6 @@ namespace MollieShopware\Components\ApplePayDirect;
 use MollieShopware\Components\ApplePayDirect\Handler\ApplePayDirectHandler;
 use MollieShopware\Components\Config;
 use MollieShopware\Components\MollieApiFactory;
-use MollieShopware\Components\Services\PaymentMethodService;
 use MollieShopware\Components\Shipping\Shipping;
 
 /**
@@ -13,31 +12,11 @@ use MollieShopware\Components\Shipping\Shipping;
  */
 class ApplePayDirectFactory
 {
-
+    
     /**
-     * @var \sAdmin
+     * @var Config $mollieConfig
      */
-    private $sAdmin;
-
-    /**
-     * @var \sBasket
-     */
-    private $sBasket;
-
-    /**
-     * @var Shipping $cmpShipping
-     */
-    private $cmpShipping;
-
-    /**
-     * @var PaymentMethodService $paymentMethodService
-     */
-    private $paymentMethodService;
-
-    /**
-     * @var \Enlight_Components_Session_Namespace
-     */
-    private $session;
+    private $mollieConfig;
 
     /**
      * @var MollieApiFactory $apiFactory
@@ -45,36 +24,45 @@ class ApplePayDirectFactory
     private $apiFactory;
 
     /**
-     * @var Config $mollieConfig
+     * @var \sAdmin
      */
-    private $mollieConfig;
+    private $admin;
 
+    /**
+     * @var \sBasket
+     */
+    private $basket;
 
-    private $snippets;
+    /**
+     * @var Shipping $shipping
+     */
+    private $shipping;
+
+    /**
+     * @var \Enlight_Components_Session_Namespace
+     */
+    private $session;
+
 
     /**
      * ApplePayDirectFactory constructor.
      *
+     * @param Config $config
+     * @param MollieApiFactory $apiFactory
      * @param $modules
      * @param Shipping $cmpShipping
-     * @param PaymentMethodService $paymentMethodService
      * @param \Enlight_Components_Session_Namespace $session
-     * @param MollieApiFactory $apiFactory
-     * @param Config $config
-     * @param $snippets
      */
-    public function __construct($modules, Shipping $cmpShipping, PaymentMethodService $paymentMethodService, \Enlight_Components_Session_Namespace $session, MollieApiFactory $apiFactory, Config $config, $snippets)
+    public function __construct(Config $config, MollieApiFactory $apiFactory, $modules, Shipping $cmpShipping, \Enlight_Components_Session_Namespace $session)
     {
-        $this->sAdmin = $modules->Admin();
-        $this->sBasket = $modules->Basket();
+        $this->admin = $modules->Admin();
+        $this->basket = $modules->Basket();
 
-        $this->cmpShipping = $cmpShipping;
-        $this->paymentMethodService = $paymentMethodService;
+        $this->shipping = $cmpShipping;
         $this->session = $session;
 
         $this->apiFactory = $apiFactory;
         $this->mollieConfig = $config;
-        $this->snippets = $snippets;
     }
 
     /**
@@ -87,12 +75,10 @@ class ApplePayDirectFactory
             $this->apiFactory->createLiveClient(),
             $this->apiFactory->createTestClient(),
             $this->mollieConfig->isTestmodeActive(),
-            $this->sAdmin,
-            $this->sBasket,
-            $this->cmpShipping,
-            $this->paymentMethodService,
-            $this->session,
-            $this->snippets
+            $this->admin,
+            $this->basket,
+            $this->shipping,
+            $this->session
         );
     }
 

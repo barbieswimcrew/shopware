@@ -4,7 +4,6 @@ use Mollie\Api\Exceptions\ApiException;
 use MollieShopware\Components\Account\Account;
 use MollieShopware\Components\ApplePayDirect\ApplePayDirectFactory;
 use MollieShopware\Components\ApplePayDirect\ApplePayDirectHandlerInterface;
-use MollieShopware\Components\ApplePayDirect\Services\ApplePayButtonBuilder;
 use MollieShopware\Components\ApplePayDirect\Services\ApplePayFormatter;
 use MollieShopware\Components\ApplePayDirect\Services\ApplePayPaymentMethod;
 use MollieShopware\Components\BasketSnapshot\BasketSnapshot;
@@ -35,7 +34,7 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
      * @var ApplePayDirectHandlerInterface $handlerApplePay
      */
     private $handlerApplePay;
-    
+
     /**
      * @var ApplePayPaymentMethod
      */
@@ -102,8 +101,8 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
         $this->account = Shopware()->Container()->get('mollie_shopware.components.account.account');
         $this->basketSnapshot = Shopware()->Container()->get('mollie_shopware.components.basket_snapshot.basket_snapshot');
 
-        $this->applePayPaymentMethod = Shopware()->Container()->get('mollie_shopware.components.apple_pay_direct.services.applepay_payment_method');
-        $this->applePayFormatter = Shopware()->Container()->get('mollie_shopware.components.apple_pay_direct.services.applepay_formatter');
+        $this->applePayPaymentMethod = Shopware()->Container()->get('mollie_shopware.components.apple_pay_direct.services.payment_method');
+        $this->applePayFormatter = Shopware()->Container()->get('mollie_shopware.components.apple_pay_direct.services.formatter');
 
         /** @var ApplePayDirectFactory $applePayFactory */
         $applePayFactory = Shopware()->Container()->get('mollie_shopware.components.apple_pay_direct.factory');

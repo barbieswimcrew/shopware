@@ -4,7 +4,7 @@ namespace MollieShopware\Components\ApplePayDirect\Services;
 
 use Enlight_Controller_Request_Request;
 use Enlight_View;
-use MollieShopware\Components\ApplePayDirect\Models\ApplePayButton;
+use MollieShopware\Components\ApplePayDirect\Models\Button\ApplePayButton;
 use MollieShopware\Components\Country\CountryIsoParser;
 use Shopware\Models\Shop\Shop;
 
@@ -15,7 +15,8 @@ class ApplePayButtonBuilder
      *
      */
     const KEY_MOLLIE_APPLEPAY_BUTTON = 'sMollieApplePayDirectButton';
-
+    
+    
     /**
      * @var \sAdmin
      */

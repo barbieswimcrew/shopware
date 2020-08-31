@@ -1,6 +1,6 @@
 <?php
 
-namespace MollieShopware\Components\ApplePayDirect\Models;
+namespace MollieShopware\Components\ApplePayDirect\Models\Button;
 
 
 /**
