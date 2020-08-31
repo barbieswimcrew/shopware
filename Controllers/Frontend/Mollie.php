@@ -51,6 +51,12 @@ class Shopware_Controllers_Frontend_Mollie extends AbstractPaymentController
      */
     public function directAction()
     {
+        # just make sure it exists
+        # otherwise it would throw an exception immediately
+        /** @var ApplePayDirectFactory $applePayFactory */
+        $applePayFactory = Shopware()->Container()->get('mollie_shopware.components.apple_pay_direct.factory');
+        
+        
         /** @var bool $orderCreated */
         $orderCreated = false;
 
@@ -197,9 +203,6 @@ class Shopware_Controllers_Frontend_Mollie extends AbstractPaymentController
             return $this->redirectBack('Payment failed');
 
         } finally {
-
-            /** @var ApplePayDirectFactory $applePayFactory */
-            $applePayFactory = Shopware()->Container()->get('mollie_shopware.components.apple_pay_direct.factory');
             
             /** @var ApplePayDirectHandlerInterface $applePay */
             $applePay = $applePayFactory->createHandler();
