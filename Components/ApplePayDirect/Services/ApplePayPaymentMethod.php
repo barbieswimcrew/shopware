@@ -2,7 +2,6 @@
 
 namespace MollieShopware\Components\ApplePayDirect\Services;
 
-use MollieShopware\Components\ApplePayDirect\ApplePayDirectHandlerInterface;
 use MollieShopware\Components\Constants\ShopwarePaymentMethod;
 use MollieShopware\Components\Services\PaymentMethodService;
 use Shopware\Models\Payment\Payment;

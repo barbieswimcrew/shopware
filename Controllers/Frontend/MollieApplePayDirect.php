@@ -508,7 +508,7 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
             $costs = $this->shipping->getShippingMethodCosts($userCountry, $method['id']);
 
             /** @var array $formatted */
-            $formatted = $this->applePayFormatter->formatApplePayShippingMethod($method, $costs);
+            $formatted = $this->applePayFormatter->formatShippingMethod($method, $costs);
 
             if ($selectedMethodID === $method['id']) {
                 $selectedMethod = $formatted;

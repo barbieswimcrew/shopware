@@ -12,11 +12,13 @@ class ApplePayButtonBuilder
 {
 
     /**
-     *
+     * This is the smarty view variable that will be
+     * used as key in the storefront.
+     * It contains all required data for apple pay direct.
      */
     const KEY_MOLLIE_APPLEPAY_BUTTON = 'sMollieApplePayDirectButton';
-    
-    
+
+
     /**
      * @var \sAdmin
      */
@@ -51,11 +53,14 @@ class ApplePayButtonBuilder
         /** @var string $controller */
         $controller = strtolower($request->getControllerName());
 
+        # apple pay requires a country iso
+        # we use the first one from our country list.
+        # this list is already configured for the current shop.
+        # we also just use the first one, because we don't know the
+        # country of the anonymous user at that time
         $activeCountries = $this->sAdmin->sGetCountryList();
         $firstCountry = array_shift($activeCountries);
-
         $isoParser = new CountryIsoParser();
-
         $country = $isoParser->getISO($firstCountry);
 
         $button = new ApplePayButton(
@@ -64,6 +69,10 @@ class ApplePayButtonBuilder
             $shop->getCurrency()->getCurrency()
         );
 
+
+        # now decide if we want to set our button to "item mode".
+        # this means, that only this item will be sold
+        # when using the apple pay direct checkout
         if ($controller === 'detail') {
             $vars = $view->getAssign();
             $button->setItemMode($vars["sArticle"]["ordernumber"]);

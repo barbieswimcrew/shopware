@@ -2,6 +2,7 @@
 
 namespace MollieShopware\Components\ApplePayDirect;
 
+use Mollie\Api\Exceptions\ApiException;
 use MollieShopware\Components\ApplePayDirect\Handler\ApplePayDirectHandler;
 use MollieShopware\Components\Config;
 use MollieShopware\Components\MollieApiFactory;
@@ -67,7 +68,7 @@ class ApplePayDirectFactory
 
     /**
      * @return ApplePayDirectHandler
-     * @throws \Mollie\Api\Exceptions\ApiException
+     * @throws ApiException
      */
     public function createHandler()
     {

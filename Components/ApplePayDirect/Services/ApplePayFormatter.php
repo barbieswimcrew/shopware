@@ -12,6 +12,12 @@ class ApplePayFormatter
 {
 
     /**
+     * this is the default snippet namespace for our
+     * mollie apple pay direct translation.
+     */
+    const SNIPPET_NS = 'frontend/MollieShopware/ApplePayDirect';
+
+    /**
      * @var Enlight_Components_Snippet_Namespace
      */
     private $snippets;
@@ -24,7 +30,7 @@ class ApplePayFormatter
      */
     public function __construct($snippets)
     {
-        $this->snippets = $snippets->getNamespace('frontend/MollieShopware/ApplePayDirect');
+        $this->snippets = $snippets->getNamespace(self::SNIPPET_NS);
     }
 
 
@@ -33,7 +39,7 @@ class ApplePayFormatter
      * @param $shippingCosts
      * @return array
      */
-    public function formatApplePayShippingMethod(array $method, $shippingCosts)
+    public function formatShippingMethod(array $method, $shippingCosts)
     {
         return array(
             'identifier' => $method['id'],
@@ -72,6 +78,8 @@ class ApplePayFormatter
         # SHIPPING DATA
         # -----------------------------------------------------
         if ($cart->getShipping() instanceof ApplePayLineItem) {
+            # we use the shipping name for the label
+            # because that can be different, and is better than a generic name
             $data['items'][] = array(
                 'label' => $cart->getShipping()->getName(),
                 'type' => 'final',
