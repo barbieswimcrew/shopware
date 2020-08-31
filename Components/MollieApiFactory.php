@@ -81,7 +81,7 @@ class MollieApiFactory
             $this->config->getTestApiKey()
         );
     }
-    
+
 
     /**
      * @param $apiKey
@@ -103,8 +103,14 @@ class MollieApiFactory
             'MollieShopware/' . MollieShopware::PLUGIN_VERSION
         );
 
-        // set the api key based on the configuration
-        $client->setApiKey($apiKey);
+        try {
+
+            // set the api key based on the configuration
+            $client->setApiKey($apiKey);
+
+        } catch (\Throwable $ex) {
+            Logger::log('error', 'Fatal error with Mollie API Key. Invalid Key: ' . $apiKey, $ex, false);
+        }
 
         return $client;
     }

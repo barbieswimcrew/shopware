@@ -147,7 +147,7 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
             die();
 
         } catch (Throwable $ex) {
-            Logger::log('error when adding product to apple pay cart', $ex->getMessage(), $ex);
+            Logger::log('error', 'Error when adding product to apple pay cart', $ex->getMessage(), $ex);
 
             http_response_code(500);
             die();
@@ -222,7 +222,7 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
             die();
 
         } catch (Throwable $ex) {
-            Logger::log('error when loading apple pay shipping methods', $ex->getMessage(), $ex);
+            Logger::log('error', 'Error when loading apple pay shipping methods', $ex->getMessage(), $ex);
 
             $data = array(
                 'success' => false,
@@ -275,7 +275,7 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
             die();
 
         } catch (Throwable $ex) {
-            Logger::log('error when setting apple pay shipping', $ex->getMessage(), $ex);
+            Logger::log('error', 'Error when setting apple pay shipping', $ex->getMessage(), $ex);
 
             $data = array(
                 'success' => false,
@@ -311,7 +311,7 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
             die();
 
         } catch (Throwable $ex) {
-            Logger::log('error when restoring apple pay cart', $ex->getMessage(), $ex);
+            Logger::log('error', 'Error when restoring apple pay cart', $ex->getMessage(), $ex);
 
             http_response_code(500);
             die();

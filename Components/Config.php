@@ -145,12 +145,13 @@ class Config
             return false;
         }
 
-        if (strtolower($isActive) === 'yes') {
-            return true;
-
+        if (strtolower($isActive) === 'no') {
+            return false;
         }
 
-        return false;
+        # default is TRUE
+        # just to avoid any problems with plugin updates
+        return true;
     }
 
     /**
