@@ -8,12 +8,7 @@ namespace MollieShopware\Components\ApplePayDirect\Models\Cart;
  */
 class ApplePayCart
 {
-
-    /**
-     * @var string
-     */
-    private $label;
-
+    
     /**
      * @var ApplePayLineItem[]
      */
@@ -38,23 +33,7 @@ class ApplePayCart
         $this->shipping = null;
         $this->taxes = null;
     }
-
-    /**
-     * @return string
-     */
-    public function getLabel()
-    {
-        return $this->label;
-    }
-
-    /**
-     * @param string $label
-     */
-    public function setLabel($label)
-    {
-        $this->label = $label;
-    }
-
+    
     /**
      * @return ApplePayLineItem
      */
@@ -129,12 +108,11 @@ class ApplePayCart
     }
 
     /**
-     * @param $name
-     * @param $price
+     * @param $prices
      */
-    public function setTaxes($name, $price)
+    public function setTaxes($price)
     {
-        $this->taxes = new ApplePayLineItem("TAXES", $name, 1, $price);
+        $this->taxes = new ApplePayLineItem("TAXES", '', 1, $price);
     }
 
 }

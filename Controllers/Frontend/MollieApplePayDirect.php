@@ -98,6 +98,7 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
         $this->orderSession = Shopware()->Container()->get('mollie_shopware.components.order_session');
         $this->shopContext = Shopware()->Container()->get('shopware_storefront.context_service')->getShopContext();
         $this->applePaySetup = Shopware()->Container()->get('mollie_shopware.components.apple_pay_direct.setup');
+        $this->applePayFormatter = Shopware()->Container()->get('mollie_shopware.components.apple_pay_direct.services.apple_pay_formatter');
 
         /** @var ApplePayDirectFactory $applePayFactory */
         $applePayFactory = Shopware()->Container()->get('mollie_shopware.components.apple_pay_direct.factory');
@@ -111,7 +112,6 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
             Shopware()->Container()->get('mollie_shopware.components.apple_pay_direct.gateway.dbal.register_guest_customer_gateway')
         );
 
-        $this->applePayFormatter = new ApplePayFormatter();
         $this->basketSnapshot = new BasketSnapshot($this->session);
     }
 
@@ -125,7 +125,7 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
     public function addProductAction()
     {
         try {
-            
+
             $this->loadServices();
 
             Shopware()->Plugins()->Controller()->ViewRenderer()->setNoRender();
@@ -214,12 +214,13 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
             );
 
 
-            $cart = $this->applePay->getApplePayCart(Shopware()->Shop());
+            $cart = $this->applePay->getApplePayCart();
+            $formattedCart = $this->applePayFormatter->formatCart($cart, Shopware()->Shop());
 
 
             $data = array(
                 'success' => true,
-                'cart' => $this->applePayFormatter->formatCart($cart),
+                'cart' => $formattedCart,
                 'shippingmethods' => $shippingMethods,
             );
 
@@ -268,11 +269,12 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
                 $this->shipping->setCartShippingMethodID($shippingIdentifier);
             }
 
-            $cart = $this->applePay->getApplePayCart(Shopware()->Shop());
+            $cart = $this->applePay->getApplePayCart();
+            $formattedCart = $this->applePayFormatter->formatCart($cart, Shopware()->Shop());
 
             $data = array(
                 'success' => false,
-                'cart' => $this->applePayFormatter->formatCart($cart),
+                'cart' => $formattedCart,
             );
 
             echo json_encode($data);
@@ -310,7 +312,7 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
             // only necessary if the customer directly checks out from product detail page
             $countries = $this->admin->sGetCountryList();
             $this->admin->sGetPremiumShippingcosts(reset($countries));
-            
+
             echo "";
             die();
 

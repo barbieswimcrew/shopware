@@ -105,11 +105,10 @@ class ApplePayDirectHandler implements ApplePayDirectHandlerInterface
 
 
     /**
-     * @param Shop $shop
      * @return mixed|ApplePayCart
      * @throws \Enlight_Exception
      */
-    public function getApplePayCart(Shop $shop)
+    public function getApplePayCart()
     {
         $cart = new ApplePayCart();
 
@@ -117,6 +116,7 @@ class ApplePayDirectHandler implements ApplePayDirectHandlerInterface
 
         /** @var array $item */
         foreach ($this->sBasket->sGetBasketData()['content'] as $item) {
+
             $cart->addItem(
                 $item['ordernumber'],
                 $item['articlename'],
@@ -142,19 +142,14 @@ class ApplePayDirectHandler implements ApplePayDirectHandlerInterface
 
             $cart->setShipping($shipmentMethod['name'], (float)$shipping['value']);
 
-            # todo refactor + tests
             $taxes += ($shipping['brutto'] - $shipping['netto']);
         }
 
-
-        $cart->setTaxes(
-            $this->snippets->get('lineItemLabelTaxes', 'TAXES'),
-            $taxes
-        );
-
-        # if we are on PDP then our apple pay label and amount
-        # is the one from our article
-        $cart->setLabel($shop->getName());
+        # also add our taxes value
+        # if we have one
+        if ($taxes > 0) {
+            $cart->setTaxes($taxes);
+        }
 
         return $cart;
     }

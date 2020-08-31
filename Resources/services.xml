@@ -4,8 +4,11 @@
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
-    <services>
+    <imports>
+        <import resource="views/services/applepay_direct.xml"/>
+    </imports>
 
+    <services>
 
         <!-- COMPONENTS -->
         <!-- _______________________________________________________________________________________________________ -->
@@ -98,32 +101,6 @@
             <argument type="service" id="models"/>
         </service>
 
-        <service id="mollie_shopware.components.apple_pay_direct.factory" class="MollieShopware\Components\ApplePayDirect\ApplePayDirectFactory">
-            <argument type="service" id="modules"/>
-            <argument type="service" id="mollie_shopware.components.shipping"/>
-            <argument type="service" id="mollie_shopware.payment_method_service"/>
-            <argument type="service" id="session"/>
-            <argument type="service" id="mollie_shopware.api_factory"/>
-            <argument type="service" id="mollie_shopware.config"/>
-            <argument type="service" id="snippets"/>
-        </service>
-
-        <service id="mollie_shopware.components.apple_pay_direct.setup" class="MollieShopware\Components\ApplePayDirect\ApplePayDirectSetup">
-            <argument type="service" id="modules"/>
-            <argument type="service" id="mollie_shopware.payment_method_service"/>
-        </service>
-        
-        <service id="mollie_shopware.components.apple_pay_direct.gateway.dbal.register_guest_customer_gateway"
-                 class="MollieShopware\Components\ApplePayDirect\Gateway\DBAL\RegisterGuestCustomerGateway">
-            <argument type="service" id="shopware_account.address_service"/>
-            <argument type="service" id="models"/>
-            <argument type="service" id="shopware.form.factory"/>
-            <argument type="service" id="modules"/>
-            <argument type="service" id="shopware_storefront.context_service"/>
-            <argument type="service" id="shopware_account.register_service"/>
-        </service>
-
-
         <!-- Event Subscribers -->
         <!-- _______________________________________________________________________________________________________ -->
 
@@ -143,10 +120,6 @@
 
         <service id="mollie_shopware.subscriber.order_backend" class="MollieShopware\Subscriber\OrderBackendSubscriber">
             <argument type="service" id="mollie_shopware.order_service"/>
-            <tag name="shopware.event_subscriber"/>
-        </service>
-
-        <service id="mollie_shopware.subscriber.applepay_direct" class="MollieShopware\Subscriber\ApplePayDirectSubscriber">
             <tag name="shopware.event_subscriber"/>
         </service>
 

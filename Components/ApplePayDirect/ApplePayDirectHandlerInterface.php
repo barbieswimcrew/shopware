@@ -20,10 +20,9 @@ interface ApplePayDirectHandlerInterface
     const APPLEPAY_DIRECT_NAME = 'mollie_' . PaymentMethod::APPLEPAY_DIRECT;
 
     /**
-     * @param Shop $shop
      * @return mixed
      */
-    public function getApplePayCart(Shop $shop);
+    public function getApplePayCart();
 
     /**
      * @param $domain
