@@ -138,14 +138,19 @@ class Config
      */
     public function isTestmodeActive()
     {
-        /** @var bool|null $isActive */
+        /** @var string|null $isActive */
         $isActive = $this->get('test_mode_active');
 
         if ($isActive === null) {
             return false;
         }
 
-        return $isActive;
+        if (strtolower($isActive) === 'yes') {
+            return true;
+
+        }
+
+        return false;
     }
 
     /**

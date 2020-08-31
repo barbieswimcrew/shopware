@@ -332,12 +332,7 @@ class PaymentService
         // Use the order's shop in the in the config service
         $this->config->setShop($order->getShop()->getId());
 
-        // Set the corresponding API key in the client
-        try {
-            $this->apiClient->setApiKey($this->config->apiKey());
-        } catch (\Exception $e) {
-            //
-        }
+        $this->apiClient = $this->apiFactory->create($order->getShop()->getId());
     }
 
     /**

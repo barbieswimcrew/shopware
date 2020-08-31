@@ -77,6 +77,7 @@ class ApplePayDirectHandler implements ApplePayDirectHandlerInterface
         $this->admin = $sAdmin;
         $this->basket = $sBasket;
         $this->shipping = $cmpShipping;
+        $this->session = $session;
     }
 
 
