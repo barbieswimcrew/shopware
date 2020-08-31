@@ -10,6 +10,7 @@ use MollieShopware\Components\ApplePayDirect\ApplePayDirectHandler;
 use MollieShopware\Components\ApplePayDirect\ApplePayDirectHandlerInterface;
 use MollieShopware\Components\ApplePayDirect\ApplePayDirectSetup;
 use MollieShopware\Components\Constants\PaymentMethod;
+use MollieShopware\Components\Constants\ShopwarePaymentMethod;
 use Shopware\Components\Theme\LessDefinition;
 
 class ApplePayDirectSubscriber implements SubscriberInterface
@@ -68,12 +69,16 @@ class ApplePayDirectSubscriber implements SubscriberInterface
         /** @var Enlight_View $view */
         $view = $args->getSubject()->View();
 
+        $buttonBuilder = Shopware()->Container()->get('mollie_shopware.components.apple_pay_direct.services.applepay_button_builder');
+
         # add the apple pay direct data for our current view.
         # the data depends on our page.
         # this might either be a product on PDP, or the full cart data
-        /** @var ApplePayDirectSetup $applePay */
-        $applePay = Shopware()->Container()->get('mollie_shopware.components.apple_pay_direct.setup');
-        $applePay->addButtonStatus($request, $view, Shopware()->Shop());
+        $buttonBuilder->addButtonStatus(
+            $request,
+            $view,
+            Shopware()->Shop()
+        );
     }
 
     /**
@@ -103,7 +108,7 @@ class ApplePayDirectSubscriber implements SubscriberInterface
     private function removeApplePayDirectFromPaymentMeans(array &$sPayments)
     {
         foreach ($sPayments as $index => $payment) {
-            if ($payment['name'] === ApplePayDirectHandlerInterface::APPLEPAY_DIRECT_NAME) {
+            if ($payment['name'] === ShopwarePaymentMethod::APPLEPAYDIRECT) {
                 unset($sPayments[$index]);
                 break;
             }

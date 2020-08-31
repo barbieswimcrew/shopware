@@ -1,19 +1,14 @@
 <?php
 
-namespace MollieShopware\Components\ApplePayDirect;
+namespace MollieShopware\Components\ApplePayDirect\Services;
 
 use Enlight_Controller_Request_Request;
 use Enlight_View;
 use MollieShopware\Components\ApplePayDirect\Models\ApplePayButton;
 use MollieShopware\Components\Country\CountryIsoParser;
-use MollieShopware\Components\Services\PaymentMethodService;
-use Shopware\Models\Payment\Payment;
 use Shopware\Models\Shop\Shop;
 
-/**
- * @copyright 2020 dasistweb GmbH (https://www.dasistweb.de)
- */
-class ApplePayDirectSetup
+class ApplePayButtonBuilder
 {
 
     /**
@@ -21,28 +16,27 @@ class ApplePayDirectSetup
      */
     const KEY_MOLLIE_APPLEPAY_BUTTON = 'sMollieApplePayDirectButton';
 
-
     /**
      * @var \sAdmin
      */
     private $sAdmin;
 
     /**
-     * @var PaymentMethodService $paymentMethodService
+     * @var ApplePayPaymentMethod
      */
-    private $paymentMethodService;
+    private $applePayPaymentMethod;
 
 
     /**
-     * ApplePayDirect constructor.
+     * ApplePayButtonBuilder constructor.
      *
      * @param $modules
-     * @param PaymentMethodService $paymentMethodService
+     * @param ApplePayPaymentMethod $applePayPaymentMethod
      */
-    public function __construct($modules, PaymentMethodService $paymentMethodService)
+    public function __construct($modules, ApplePayPaymentMethod $applePayPaymentMethod)
     {
         $this->sAdmin = $modules->Admin();
-        $this->paymentMethodService = $paymentMethodService;
+        $this->applePayPaymentMethod = $applePayPaymentMethod;
     }
 
 
@@ -64,7 +58,7 @@ class ApplePayDirectSetup
         $country = $isoParser->getISO($firstCountry);
 
         $button = new ApplePayButton(
-            $this->isApplePayDirectAvailable(),
+            $this->applePayPaymentMethod->isApplePayDirectEnabled(),
             $country,
             $shop->getCurrency()->getCurrency()
         );
@@ -75,40 +69,6 @@ class ApplePayDirectSetup
         }
 
         $view->assign(self::KEY_MOLLIE_APPLEPAY_BUTTON, $button->toArray());
-    }
-
-    /**
-     * @return Payment
-     * @throws \Exception
-     */
-    public function getPaymentMethod()
-    {
-        $applePayDirect = $this->paymentMethodService->getPaymentMethod(
-            [
-                'name' => ApplePayDirectHandlerInterface::APPLEPAY_DIRECT_NAME,
-                'active' => true,
-            ]
-        );
-
-        if ($applePayDirect instanceof Payment) {
-            return $applePayDirect;
-        }
-
-        throw new \Exception('Apple Pay Direct Payment not found');
-    }
-
-    /**
-     * @return bool
-     */
-    private function isApplePayDirectAvailable(): bool
-    {
-        try {
-            $this->getPaymentMethod();
-
-            return true;
-        } catch (\Exception $ex) {
-            return false;
-        }
     }
 
 }

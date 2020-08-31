@@ -39,18 +39,18 @@ class ApplePayDirectFactory
      */
     private $session;
 
-    /** 
-     * @var MollieApiFactory $apiFactory 
+    /**
+     * @var MollieApiFactory $apiFactory
      */
     private $apiFactory;
 
-    /** 
-     * @var Config $mollieConfig 
+    /**
+     * @var Config $mollieConfig
      */
     private $mollieConfig;
 
 
-private $snippets;
+    private $snippets;
 
     /**
      * ApplePayDirectFactory constructor.
@@ -81,9 +81,9 @@ private $snippets;
      * @return ApplePayDirectHandler
      * @throws \Mollie\Api\Exceptions\ApiException
      */
-    public function create()
+    public function createHandler()
     {
-        $applepay = new ApplePayDirectHandler(
+        return new ApplePayDirectHandler(
             $this->apiFactory->createLiveClient(),
             $this->apiFactory->createTestClient(),
             $this->mollieConfig->isTestmodeActive(),
@@ -94,8 +94,6 @@ private $snippets;
             $this->session,
             $this->snippets
         );
-
-        return $applepay;
     }
 
 }

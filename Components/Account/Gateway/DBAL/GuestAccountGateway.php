@@ -1,9 +1,9 @@
 <?php
 
-namespace MollieShopware\Components\ApplePayDirect\Gateway\DBAL;
+namespace MollieShopware\Components\Account\Gateway\DBAL;
 
 use Doctrine\ORM\EntityManagerInterface;
-use MollieShopware\Components\ApplePayDirect\Gateway\RegisterGuestCustomerGatewayInterface;
+use MollieShopware\Components\Account\Gateway\GuestAccountGatewayInterface;
 use Shopware\Bundle\AccountBundle\Form\Account\AddressFormType;
 use Shopware\Bundle\AccountBundle\Form\Account\PersonalFormType;
 use Shopware\Bundle\AccountBundle\Service\AddressServiceInterface;
@@ -15,7 +15,7 @@ use Shopware\Models\Customer\Customer;
 use Shopware\Models\Payment\Payment;
 use Symfony\Component\Form\FormFactoryInterface;
 
-class RegisterGuestCustomerGateway implements RegisterGuestCustomerGatewayInterface
+class GuestAccountGateway implements GuestAccountGatewayInterface
 {
 
     /** @var AddressServiceInterface $addressService */

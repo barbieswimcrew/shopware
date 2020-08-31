@@ -13,12 +13,7 @@ use Shopware\Models\Shop\Shop;
  */
 interface ApplePayDirectHandlerInterface
 {
-
-    /**
-     *
-     */
-    const APPLEPAY_DIRECT_NAME = 'mollie_' . PaymentMethod::APPLEPAY_DIRECT;
-
+    
     /**
      * @return mixed
      */

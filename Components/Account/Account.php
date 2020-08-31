@@ -2,7 +2,7 @@
 
 namespace MollieShopware\Components\Account;
 
-use MollieShopware\Components\ApplePayDirect\Gateway\RegisterGuestCustomerGatewayInterface;
+use MollieShopware\Components\Account\Gateway\GuestAccountGatewayInterface;
 use Shopware\Components\Password\Manager;
 
 /**
@@ -27,20 +27,23 @@ class Account
     private $pwdEncoder;
 
     /**
-     * @var RegisterGuestCustomerGatewayInterface
+     * @var GuestAccountGatewayInterface
      */
     private $gwGuestCustomer;
 
 
     /**
-     * @param \sAdmin $admin
+     * Account constructor.
+     *
+     * @param $modules
      * @param \Enlight_Components_Session_Namespace $session
      * @param Manager $pwdEncoder
-     * @param RegisterGuestCustomerGatewayInterface $gwGuestCustomer
+     * @param GuestAccountGatewayInterface $gwGuestCustomer
      */
-    public function __construct(\sAdmin $admin, \Enlight_Components_Session_Namespace $session, Manager $pwdEncoder, RegisterGuestCustomerGatewayInterface $gwGuestCustomer)
+    public function __construct($modules, \Enlight_Components_Session_Namespace $session, Manager $pwdEncoder, GuestAccountGatewayInterface $gwGuestCustomer)
     {
-        $this->admin = $admin;
+        $this->admin = $modules->sAdmin();
+
         $this->session = $session;
         $this->pwdEncoder = $pwdEncoder;
         $this->gwGuestCustomer = $gwGuestCustomer;
@@ -114,6 +117,7 @@ class Account
 
     /**
      * @param $email
+     * @return mixed
      */
     public function getGuestAccount($email)
     {

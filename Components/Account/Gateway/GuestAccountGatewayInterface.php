@@ -1,8 +1,8 @@
 <?php
 
-namespace MollieShopware\Components\ApplePayDirect\Gateway;
+namespace MollieShopware\Components\Account\Gateway;
 
-interface RegisterGuestCustomerGatewayInterface
+interface GuestAccountGatewayInterface
 {
 
     /**

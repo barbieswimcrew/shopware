@@ -202,7 +202,7 @@ class Shopware_Controllers_Frontend_Mollie extends AbstractPaymentController
             $applePayFactory = Shopware()->Container()->get('mollie_shopware.components.apple_pay_direct.factory');
             
             /** @var ApplePayDirectHandlerInterface $applePay */
-            $applePay = $applePayFactory->create();
+            $applePay = $applePayFactory->createHandler();
             
             # we always have to immediately clear the token in SUCCESS or FAILURE ways
             $applePay->setPaymentToken('');

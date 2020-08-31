@@ -658,7 +658,7 @@ class PaymentService
     {
         /** @var ApplePayDirectFactory $applePayFactory */
         $applePayFactory = Shopware()->Container()->get('mollie_shopware.components.apple_pay_direct.factory');
-        return $applePayFactory->create()->getPaymentToken();
+        return $applePayFactory->createHandler()->getPaymentToken();
     }
 
     /**
