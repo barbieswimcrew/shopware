@@ -11,25 +11,31 @@ class ApplePayCartTest extends TestCase
 {
 
     /**
-     * This test verifies that the country
-     * value is set and used correctly.
+     * This test verifies that the shipping
+     * can be set correctly
      */
-    public function testCountry()
+    public function testShipipng()
     {
-        $cart = new ApplePayCart('NL', 'EUR');
+        $cart = new ApplePayCart();
+        $cart->setShipping('My Shipping', 3.49);
 
-        $this->assertEquals('NL', $cart->getCountryISO());
+        $this->assertEquals('My Shipping', $cart->getShipping()->getName());
+        $this->assertEquals(1, $cart->getShipping()->getQuantity());
+        $this->assertEquals(3.49, $cart->getShipping()->getPrice());
     }
 
     /**
-     * This test verifies that the currency
-     * value is set and used correctly.
+     * This test verifies that the taxes
+     * can be set correctly.
      */
     public function testCurrency()
     {
-        $cart = new ApplePayCart('NL', 'EUR');
+        $cart = new ApplePayCart();
+        $cart->setTaxes(4.49);
 
-        $this->assertEquals('EUR', $cart->getCurrency());
+        $this->assertEquals('', $cart->getTaxes()->getName());
+        $this->assertEquals(1, $cart->getTaxes()->getQuantity());
+        $this->assertEquals(4.49, $cart->getTaxes()->getPrice());
     }
 
 }
