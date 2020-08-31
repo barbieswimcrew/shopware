@@ -3,6 +3,7 @@
 namespace MollieShopware\Components\ApplePayDirect\Services;
 
 use Enlight_Components_Snippet_Namespace;
+use MollieShopware\Components\ApplePayDirect\Models\Button\ApplePayButton;
 use MollieShopware\Components\ApplePayDirect\Models\Cart\ApplePayCart;
 use MollieShopware\Components\ApplePayDirect\Models\Cart\ApplePayLineItem;
 use Shopware\Models\Shop\Shop;
@@ -32,8 +33,7 @@ class ApplePayFormatter
     {
         $this->snippets = $snippets->getNamespace(self::SNIPPET_NS);
     }
-
-
+    
     /**
      * @param array $method
      * @param $shippingCosts
