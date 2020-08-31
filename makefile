@@ -2,7 +2,7 @@
 # Makefile
 #
 
-.PHONY: help build
+.PHONY: help
 .DEFAULT_GOAL := help
 
 
@@ -11,15 +11,12 @@ help:
 
 # ----------------------------------------------------------------------------------------------------------------
 
+install: ## Installs all dependencies
+	composer install
+
 release: ## Creates a new ZIP package
 	make prod -B
 	cd .. && zip -r MollieShopware.zip MollieShopware/
-
-prod: ## Installs all production dependencies
-	composer install --no-dev
-
-dev: ## Installs all dev dependencies
-	composer install
 
 test: ## Starts all Tests
 	php vendor/bin/phpunit --configuration=phpunit.xml
