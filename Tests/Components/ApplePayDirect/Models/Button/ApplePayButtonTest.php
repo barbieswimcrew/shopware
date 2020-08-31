@@ -1,9 +1,8 @@
 <?php
 
-namespace MollieShopware\Tests\Components\ApplePayDirect\Models\Cart;
+namespace MollieShopware\Tests\Components\ApplePayDirect\Models\Button;
 
 use MollieShopware\Components\ApplePayDirect\Models\Button\ApplePayButton;
-use MollieShopware\Components\ApplePayDirect\Models\Cart\ApplePayCart;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -56,5 +55,5 @@ class ApplePayButtonTest extends TestCase
 
         $this->assertEquals($expected, $button->toArray());
     }
-    
+
 }
