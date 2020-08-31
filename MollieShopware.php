@@ -8,6 +8,7 @@ use Mollie\Api\MollieApiClient;
 use MollieShopware\Components\ApplePayDirect\ApplePayDirectHandler;
 use MollieShopware\Components\ApplePayDirect\ApplePayDirectHandlerInterface;
 use MollieShopware\Components\ApplePayDirect\ApplePayDirectSetup;
+use MollieShopware\Components\ApplePayDirect\Services\ApplePayDomainFileDownloader;
 use MollieShopware\Components\Config;
 use MollieShopware\Components\MollieApiFactory;
 use MollieShopware\Components\Services\PaymentMethodService;
@@ -248,10 +249,8 @@ class MollieShopware extends Plugin
         }
 
         // download apple pay merchant domain verification file of mollie
-        /** @var ApplePayDirectSetup $applePay */
-        $applePay = Shopware()->Container()->get('mollie_shopware.components.apple_pay_direct.setup');
-        $applePay->downloadDomainAssociationFile(Shopware()->DocPath());
-
+        $downloader = new ApplePayDomainFileDownloader();
+        $downloader->downloadDomainAssociationFile(Shopware()->DocPath());
 
         parent::activate($context);
     }

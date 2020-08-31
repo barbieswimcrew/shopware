@@ -125,7 +125,7 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
     public function addProductAction()
     {
         try {
-
+            
             $this->loadServices();
 
             Shopware()->Plugins()->Controller()->ViewRenderer()->setNoRender();
@@ -305,6 +305,12 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
 
             $this->basketSnapshot->restoreSnapshot($this->basket);
 
+            // add potential discounts or surcharges to prevent an amount mismatch
+            // on patching the new amount after the confirmation.
+            // only necessary if the customer directly checks out from product detail page
+            $countries = $this->admin->sGetCountryList();
+            $this->admin->sGetPremiumShippingcosts(reset($countries));
+            
             echo "";
             die();
 
