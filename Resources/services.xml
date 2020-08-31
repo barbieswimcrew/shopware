@@ -5,7 +5,7 @@
            xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
     <imports>
-        <import resource="views/services/applepay_direct.xml"/>
+        <import resource="services/applepay_direct.xml"/>
     </imports>
 
     <services>
@@ -106,7 +106,7 @@
         </service>
         
         <service id="mollie_shopware.components.account.gateway.dbal.register_guest_customer_gateway"
-                 class="GuestAccountGateway">
+                 class="MollieShopware\Components\Account\Gateway\DBAL\GuestAccountGateway">
             <argument type="service" id="shopware_account.address_service"/>
             <argument type="service" id="models"/>
             <argument type="service" id="shopware.form.factory"/>

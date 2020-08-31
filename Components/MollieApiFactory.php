@@ -11,14 +11,9 @@ use MollieShopware\MollieShopware;
 class MollieApiFactory
 {
     /**
-     * @var \MollieShopware\Components\Config
+     * @var Config
      */
     protected $config;
-
-    /**
-     * @var MollieApiClient
-     */
-    protected $apiClient;
 
 
     /**
@@ -37,8 +32,31 @@ class MollieApiFactory
      * @return MollieApiClient
      * @throws ApiException
      */
+    public function create($shopId = null)
+    {
+        $this->requireDependencies();
+
+        // set the configuration for the shop
+        $this->config->setShop($shopId);
+
+        # either use the test or the live api key
+        # depending on our sub shop configuration
+        $apiKey = ($this->config->isTestmodeActive()) ? $this->config->getTestApiKey() : $this->config->apiKey();
+
+        return $this->buildApiClient(
+            $apiKey
+        );
+    }
+
+    /**
+     * @param null $shopId
+     * @return MollieApiClient
+     * @throws ApiException
+     */
     public function createLiveClient($shopId = null)
     {
+        $this->requireDependencies();
+
         // set the configuration for the shop
         $this->config->setShop($shopId);
 
@@ -54,6 +72,8 @@ class MollieApiFactory
      */
     public function createTestClient($shopId = null)
     {
+        $this->requireDependencies();
+
         // set the configuration for the shop
         $this->config->setShop($shopId);
 
@@ -61,28 +81,7 @@ class MollieApiFactory
             $this->config->getTestApiKey()
         );
     }
-
-    /**
-     * @param null $shopId
-     * @return MollieApiClient
-     */
-    public function create($shopId = null)
-    {
-        $this->requireDependencies();
-
-        // set the configuration for the shop
-        $this->config->setShop($shopId);
-
-        if (empty($this->apiClient)) {
-            try {
-                $this->apiClient = $this->buildApiClient($this->config->apiKey());
-            } catch (\Exception $ex) {
-                //
-            }
-        }
-
-        return $this->apiClient;
-    }
+    
 
     /**
      * @param $apiKey
@@ -140,5 +139,5 @@ class MollieApiFactory
             require_once __DIR__ . '/../Client/vendor/mollie/mollie-api-php/src/MollieApiClient.php';
         }
     }
-    
+
 }
