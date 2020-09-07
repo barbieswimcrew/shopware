@@ -24,152 +24,161 @@ function initApplePay() {
             // display the apple pay button
             button.style.display = 'inline-block';
 
+            // remove previous handlers (just in case)
+            button.removeEventListener("click", onButtonClick);
             // add click event handlers
-            button.addEventListener('click', function (e) {
+            button.addEventListener('click', onButtonClick);
+        });
+    }
 
-                const session = createApplePaySession(
-                    button.dataset.label,
-                    button.dataset.amount,
-                    button.dataset.country,
-                    button.dataset.currency
-                );
+    /**
+     *
+     */
+    function onButtonClick(event) {
 
-                // if button is in item mode
-                // then we first add that product to our cart
-                // for the quick checkout.
-                // if we are in normal mode, simply continue with
-                // the current cart
-                if (button.dataset.addproducturl) {
-                    const comboQuantity = document.getElementById('sQuantity');
-                    $.post(
-                        button.dataset.addproducturl,
-                        {
-                            number: button.dataset.productnumber,
-                            quantity: comboQuantity.value,
-                        }
-                    ).done(function (data) {
-                        }
-                    );
+        const button = event.target;
+
+        const session = createApplePaySession(
+            button.dataset.label,
+            button.dataset.amount,
+            button.dataset.country,
+            button.dataset.currency
+        );
+
+        // if button is in item mode
+        // then we first add that product to our cart
+        // for the quick checkout.
+        // if we are in normal mode, simply continue with
+        // the current cart
+        if (button.dataset.addproducturl) {
+            const comboQuantity = document.getElementById('sQuantity');
+            $.post(
+                button.dataset.addproducturl,
+                {
+                    number: button.dataset.productnumber,
+                    quantity: comboQuantity.value,
                 }
+            ).done(function (data) {
+                }
+            );
+        }
 
-                /**
-                 *
-                 * @param e
-                 */
-                session.onshippingcontactselected = function (e) {
-                    $.post(
-                        button.dataset.getshippingsurl,
-                        {
-                            countryCode: e.shippingContact.countryCode,
-                            postalCode: e.shippingContact.postalCode,
-                        }
-                    ).done(function (data) {
-                            data = JSON.parse(data);
+        /**
+         *
+         * @param e
+         */
+        session.onshippingcontactselected = function (e) {
+            $.post(
+                button.dataset.getshippingsurl,
+                {
+                    countryCode: e.shippingContact.countryCode,
+                    postalCode: e.shippingContact.postalCode,
+                }
+            ).done(function (data) {
+                    data = JSON.parse(data);
 
-                            if (data.success) {
-                                session.completeShippingContactSelection(
-                                    ApplePaySession.STATUS_SUCCESS,
-                                    data.shippingmethods,
-                                    data.cart.total,
-                                    data.cart.items
-                                );
-                            } else {
-                                session.completeShippingContactSelection(
-                                    ApplePaySession.STATUS_FAILURE,
-                                    [],
-                                    {
-                                        label: "",
-                                        amount: 0,
-                                        pending: true
-                                    },
-                                    []
-                                );
-                            }
-                        }
-                    );
-                };
-
-                /**
-                 *
-                 * @param e
-                 */
-                session.onshippingmethodselected = function (e) {
-                    $.post(
-                        button.dataset.setshippingurl,
-                        {
-                            identifier: e.shippingMethod.identifier
-                        }
-                    ).done(function (data) {
-                            data = JSON.parse(data);
-
-                            if (data.success) {
-                                session.completeShippingMethodSelection(
-                                    ApplePaySession.STATUS_SUCCESS,
-                                    data.cart.total,
-                                    data.cart.items
-                                );
-                            } else {
-                                session.completeShippingMethodSelection(
-                                    ApplePaySession.STATUS_FAILURE,
-                                    {
-                                        label: "",
-                                        amount: 0,
-                                        pending: true
-                                    },
-                                    []
-                                );
-                            }
-                        }
-                    );
-                };
-
-                /**
-                 *
-                 */
-                session.oncancel = function () {
-                    // only restore our cart
-                    // if we are in item-mode for the quick checkout
-                    if (button.dataset.addproducturl) {
-                        $.get(
-                            button.dataset.restorecarturl
+                    if (data.success) {
+                        session.completeShippingContactSelection(
+                            ApplePaySession.STATUS_SUCCESS,
+                            data.shippingmethods,
+                            data.cart.total,
+                            data.cart.items
+                        );
+                    } else {
+                        session.completeShippingContactSelection(
+                            ApplePaySession.STATUS_FAILURE,
+                            [],
+                            {
+                                label: "",
+                                amount: 0,
+                                pending: true
+                            },
+                            []
                         );
                     }
-                };
+                }
+            );
+        };
 
-                /**
-                 *
-                 * @param e
-                 */
-                session.onvalidatemerchant = function (e) {
-                    $.post(
-                        button.dataset.validationurl,
-                        {
-                            validationUrl: e.validationURL
-                        }
-                    ).done(function (validationData) {
-                            validationData = JSON.parse(validationData);
-                            session.completeMerchantValidation(validationData);
-                        }
-                    ).fail(function (xhr, status, error) {
-                        session.abort();
-                    });
-                };
+        /**
+         *
+         * @param e
+         */
+        session.onshippingmethodselected = function (e) {
+            $.post(
+                button.dataset.setshippingurl,
+                {
+                    identifier: e.shippingMethod.identifier
+                }
+            ).done(function (data) {
+                    data = JSON.parse(data);
 
-                /**
-                 *
-                 * @param e
-                 */
-                session.onpaymentauthorized = function (e) {
-                    let paymentToken = e.payment.token;
-                    paymentToken = JSON.stringify(paymentToken);
-                    // now finish our payment by filling a form
-                    // and submitting it along with our payment token
-                    finishPayment(button.dataset.checkouturl, paymentToken, e.payment);
-                };
+                    if (data.success) {
+                        session.completeShippingMethodSelection(
+                            ApplePaySession.STATUS_SUCCESS,
+                            data.cart.total,
+                            data.cart.items
+                        );
+                    } else {
+                        session.completeShippingMethodSelection(
+                            ApplePaySession.STATUS_FAILURE,
+                            {
+                                label: "",
+                                amount: 0,
+                                pending: true
+                            },
+                            []
+                        );
+                    }
+                }
+            );
+        };
 
-                session.begin();
+        /**
+         *
+         */
+        session.oncancel = function () {
+            // only restore our cart
+            // if we are in item-mode for the quick checkout
+            if (button.dataset.addproducturl) {
+                $.get(
+                    button.dataset.restorecarturl
+                );
+            }
+        };
+
+        /**
+         *
+         * @param e
+         */
+        session.onvalidatemerchant = function (e) {
+            $.post(
+                button.dataset.validationurl,
+                {
+                    validationUrl: e.validationURL
+                }
+            ).done(function (validationData) {
+                    validationData = JSON.parse(validationData);
+                    session.completeMerchantValidation(validationData);
+                }
+            ).fail(function (xhr, status, error) {
+                session.abort();
             });
-        });
+        };
+
+        /**
+         *
+         * @param e
+         */
+        session.onpaymentauthorized = function (e) {
+            let paymentToken = e.payment.token;
+            paymentToken = JSON.stringify(paymentToken);
+            // now finish our payment by filling a form
+            // and submitting it along with our payment token
+            finishPayment(button.dataset.checkouturl, paymentToken, e.payment);
+        };
+
+        session.begin();
     }
 
     /**
