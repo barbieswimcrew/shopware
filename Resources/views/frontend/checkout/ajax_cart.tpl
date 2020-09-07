@@ -9,7 +9,7 @@
             initApplePay();
         </script>
         {block name="frontend_checkout_ajax_cart_apple_pay_direct"}
-            <div class="block" style="margin-top: 10px;">
+            <div class="apple-pay--container--ajax-cart">
                 {include 'frontend/plugins/payment/mollie_applepay_direct.tpl' }
             </div>
         {/block}
