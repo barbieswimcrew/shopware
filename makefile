@@ -15,8 +15,7 @@ install: ## Installs all dependencies
 	composer install
 
 release: ## Creates a new ZIP package
-	make prod -B
-	cd .. && zip -r MollieShopware.zip MollieShopware/
+	cd .. && zip -r MollieShopware.zip MollieShopware/ -x '*.git*' -x 'makefile'
 
 test: ## Starts all Tests
 	php vendor/bin/phpunit --configuration=phpunit.xml
