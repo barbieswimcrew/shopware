@@ -5,8 +5,10 @@ use Mollie\Api\MollieApiClient;
 use Mollie\Api\Resources\Profile;
 use MollieShopware\Components\ApplePayDirect\ApplePayDirectFactory;
 use MollieShopware\Components\ApplePayDirect\ApplePayDirectHandlerInterface;
+use MollieShopware\Components\ApplePayDirect\Handler\ApplePayDirectHandler;
 use MollieShopware\Components\Base\AbstractPaymentController;
 use MollieShopware\Components\Constants\PaymentStatus;
+use MollieShopware\Components\Constants\ShopwarePaymentMethod;
 use MollieShopware\Components\Logger;
 use MollieShopware\Components\Notifier;
 use MollieShopware\Components\Services\PaymentService;
@@ -73,6 +75,7 @@ class Shopware_Controllers_Frontend_Mollie extends AbstractPaymentController
      */
     public function directAction()
     {
+
         /** @var bool $orderCreated */
         $orderCreated = false;
 
@@ -182,6 +185,19 @@ class Shopware_Controllers_Frontend_Mollie extends AbstractPaymentController
             }
 
             $checkoutUrl = $paymentService->startTransaction($this->getPaymentShortName(), $transaction);
+            
+            if (strtolower($this->getPaymentShortName()) === strtolower(ShopwarePaymentMethod::APPLEPAYDIRECT)) {
+                # apple pay does return a NON-3D Secure code for payments api
+                # and NOTHING with the orders API
+                # so in that case we just finish if no exception happens
+                return $this->redirect(
+                    [
+                        'controller' => 'Mollie',
+                        'action' => 'return',
+                        'transactionNumber' => $transaction->getId(),
+                    ]
+                );
+            }
 
             if ($checkoutUrl === PaymentService::CHECKOUT_URL_CC_NON3D_SECURE) {
                 # just finish our payment by redirecting
@@ -200,9 +216,11 @@ class Shopware_Controllers_Frontend_Mollie extends AbstractPaymentController
                 return $this->redirectBack($checkoutUrl['error'], $checkoutUrl['message']);
             }
 
+
             return $this->redirect(
                 $checkoutUrl
             );
+
 
         } catch (Throwable $ex) {
 
@@ -226,6 +244,7 @@ class Shopware_Controllers_Frontend_Mollie extends AbstractPaymentController
 
             # we always have to immediately clear the token in SUCCESS or FAILURE ways
             $applePay->setPaymentToken('');
+
         }
     }
 

@@ -11,6 +11,7 @@ use MollieShopware\Components\ApplePayDirect\ApplePayDirectHandlerInterface;
 use MollieShopware\Components\ApplePayDirect\ApplePayDirectSetup;
 use MollieShopware\Components\Constants\PaymentMethod;
 use MollieShopware\Components\Constants\ShopwarePaymentMethod;
+use MollieShopware\Components\Logger;
 use Shopware\Components\Theme\LessDefinition;
 
 class ApplePayDirectSubscriber implements SubscriberInterface
@@ -79,6 +80,7 @@ class ApplePayDirectSubscriber implements SubscriberInterface
             $view,
             Shopware()->Shop()
         );
+
     }
 
     /**
