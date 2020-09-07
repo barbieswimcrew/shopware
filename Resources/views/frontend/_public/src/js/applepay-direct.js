@@ -8,7 +8,6 @@ function initApplePay() {
         initApplePayButtons();
     });
 
-
     /**
      *
      */
@@ -20,7 +19,6 @@ function initApplePay() {
         var buttons = document.querySelectorAll(applePayButtonSelector);
 
         buttons.forEach(function (button) {
-
             // display the apple pay button
             button.style.display = 'inline-block';
 
@@ -257,3 +255,18 @@ function initApplePay() {
 }
 
 initApplePay();
+
+// Reinits apple pay buttons
+$.subscribe('plugin/swAjaxVariant/onRequestDataCompleted', function() {
+    initApplePay();
+});
+
+// we need to (re)initialize it
+// because we are loaded within an AJAX request
+$.subscribe('plugin/swCollapseCart/onLoadCartFinished', function() {
+    initApplePay();
+});
+
+$.subscribe('plugin/swCollapseCart/onArticleAdded', function() {
+    initApplePay();
+});
