@@ -267,7 +267,7 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
             $formattedCart = $this->applePayFormatter->formatCart($cart, Shopware()->Shop());
 
             $data = array(
-                'success' => false,
+                'success' => true,
                 'cart' => $formattedCart,
             );
 
