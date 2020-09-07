@@ -208,7 +208,7 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
             );
 
 
-            $cart = $this->handlerApplePay->getApplePayCart();
+            $cart = $this->handlerApplePay->buildApplePayCart();
             $formattedCart = $this->applePayFormatter->formatCart($cart, Shopware()->Shop());
 
 
@@ -263,7 +263,7 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
                 $this->shipping->setCartShippingMethodID($shippingIdentifier);
             }
 
-            $cart = $this->handlerApplePay->getApplePayCart();
+            $cart = $this->handlerApplePay->buildApplePayCart();
             $formattedCart = $this->applePayFormatter->formatCart($cart, Shopware()->Shop());
 
             $data = array(

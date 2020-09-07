@@ -11,7 +11,7 @@ interface ApplePayDirectHandlerInterface
     /**
      * @return mixed
      */
-    public function getApplePayCart();
+    public function buildApplePayCart();
 
     /**
      * @param $domain

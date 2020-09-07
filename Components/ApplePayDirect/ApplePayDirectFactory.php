@@ -13,7 +13,7 @@ use MollieShopware\Components\Shipping\Shipping;
  */
 class ApplePayDirectFactory
 {
-    
+
     /**
      * @var Config $mollieConfig
      */
@@ -74,8 +74,6 @@ class ApplePayDirectFactory
     {
         return new ApplePayDirectHandler(
             $this->apiFactory->createLiveClient(),
-            $this->apiFactory->createTestClient(),
-            $this->mollieConfig->isTestmodeActive(),
             $this->admin,
             $this->basket,
             $this->shipping,

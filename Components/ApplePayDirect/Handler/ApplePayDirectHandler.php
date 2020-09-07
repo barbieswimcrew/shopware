@@ -27,16 +27,6 @@ class ApplePayDirectHandler implements ApplePayDirectHandlerInterface
     private $clientLive;
 
     /**
-     * @var MollieApiClient
-     */
-    private $clientTest;
-
-    /**
-     * @var bool
-     */
-    private $isTestModeEnabled;
-
-    /**
      * @var \sAdmin
      */
     private $admin;
@@ -58,21 +48,15 @@ class ApplePayDirectHandler implements ApplePayDirectHandlerInterface
 
 
     /**
-     * ApplePayDirectHandler constructor.
-     *
      * @param MollieApiClient $clientLive
-     * @param MollieApiClient $clientTest
-     * @param bool $isTestModeEnabled
      * @param $sAdmin
      * @param $sBasket
      * @param Shipping $cmpShipping
      * @param \Enlight_Components_Session_Namespace $session
      */
-    public function __construct(MollieApiClient $clientLive, MollieApiClient $clientTest, bool $isTestModeEnabled, $sAdmin, $sBasket, Shipping $cmpShipping, \Enlight_Components_Session_Namespace $session)
+    public function __construct(MollieApiClient $clientLive, $sAdmin, $sBasket, Shipping $cmpShipping, \Enlight_Components_Session_Namespace $session)
     {
         $this->clientLive = $clientLive;
-        $this->clientTest = $clientTest;
-        $this->isTestModeEnabled = $isTestModeEnabled;
 
         $this->admin = $sAdmin;
         $this->basket = $sBasket;
@@ -85,7 +69,7 @@ class ApplePayDirectHandler implements ApplePayDirectHandlerInterface
      * @return mixed|ApplePayCart
      * @throws \Enlight_Exception
      */
-    public function getApplePayCart()
+    public function buildApplePayCart()
     {
         $cart = new ApplePayCart();
 
@@ -111,13 +95,13 @@ class ApplePayDirectHandler implements ApplePayDirectHandlerInterface
 
         /** @var array $shipping */
         $shipping = $this->admin->sGetPremiumShippingcosts($country);
-
-        if ($shipping['value'] !== null && $shipping['value'] > 0) {
+        
+        if ($shipping['brutto'] !== null && $shipping['brutto'] > 0) {
 
             /** @var array $shipmentMethod */
             $shipmentMethod = $this->shipping->getCartShippingMethod();
 
-            $cart->setShipping($shipmentMethod['name'], (float)$shipping['value']);
+            $cart->setShipping($shipmentMethod['name'], (float)$shipping['brutto']);
 
             $taxes += ($shipping['brutto'] - $shipping['netto']);
         }
