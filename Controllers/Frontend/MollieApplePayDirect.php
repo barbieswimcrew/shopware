@@ -399,7 +399,10 @@ class Shopware_Controllers_Frontend_MollieApplePayDirect extends Shopware_Contro
             # now load the guest account
             # and set the id as "current" user for the next request
             $guest = $this->account->getGuestAccount($email);
+
             $this->session->offsetSet('sUserId', $guest['id']);
+            $this->session->offsetSet('sUserMail', $guest['email']);
+            $this->session->offsetSet('sUserPassword', $guest['hashPassword']);
 
             # save our payment token
             # that will be used when creating the
