@@ -34,14 +34,15 @@ class OrderSession
 
     /**
      * @param LegacyStructConverter $legacyStructConverter
-     * @param PaymentGatewayInterface $paymentGateway
      * @param Enlight_Components_Session_Namespace $session
      */
-    public function __construct(LegacyStructConverter $legacyStructConverter, PaymentGatewayInterface $paymentGateway, Enlight_Components_Session_Namespace $session)
+    public function __construct(LegacyStructConverter $legacyStructConverter, Enlight_Components_Session_Namespace $session)
     {
         $this->legacyStructConverter = $legacyStructConverter;
-        $this->paymentGateway = $paymentGateway;
         $this->session = $session;
+
+        # attention, doesnt exist in CLI
+        $this->paymentGateway = Shopware()->Container()->get("shopware_storefront.payment_gateway");
     }
 
 

@@ -27,13 +27,14 @@ class Shipping
     private $session;
 
     /**
-     * @param $modules
      * @param Connection $connection
      * @param Enlight_Components_Session_Namespace $session
      */
-    public function __construct($modules, Connection $connection, Enlight_Components_Session_Namespace $session)
+    public function __construct(Connection $connection, Enlight_Components_Session_Namespace $session)
     {
-        $this->admin = $modules->Admin();
+        # attention, modules doesnt exist in CLI
+        $this->admin = Shopware()->Modules()->Admin();
+
         $this->connection = $connection;
         $this->session = $session;
     }

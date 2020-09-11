@@ -54,10 +54,11 @@ class ApplePayDirectFactory
      * @param Shipping $cmpShipping
      * @param \Enlight_Components_Session_Namespace $session
      */
-    public function __construct(Config $config, MollieApiFactory $apiFactory, $modules, Shipping $cmpShipping, \Enlight_Components_Session_Namespace $session)
+    public function __construct(Config $config, MollieApiFactory $apiFactory, Shipping $cmpShipping, \Enlight_Components_Session_Namespace $session)
     {
-        $this->admin = $modules->Admin();
-        $this->basket = $modules->Basket();
+        # attention, modules does not exist in CLI
+        $this->admin = Shopware()->Modules()->Admin();
+        $this->basket = Shopware()->Modules()->Basket();
 
         $this->shipping = $cmpShipping;
         $this->session = $session;

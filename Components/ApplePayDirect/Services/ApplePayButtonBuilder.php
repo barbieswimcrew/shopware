@@ -31,14 +31,12 @@ class ApplePayButtonBuilder
 
 
     /**
-     * ApplePayButtonBuilder constructor.
-     *
-     * @param $modules
      * @param ApplePayPaymentMethod $applePayPaymentMethod
      */
-    public function __construct($modules, ApplePayPaymentMethod $applePayPaymentMethod)
+    public function __construct(ApplePayPaymentMethod $applePayPaymentMethod)
     {
-        $this->sAdmin = $modules->Admin();
+        # attention, modules does not exist in CLI
+        $this->sAdmin = Shopware()->Modules()->Admin();
         $this->applePayPaymentMethod = $applePayPaymentMethod;
     }
 

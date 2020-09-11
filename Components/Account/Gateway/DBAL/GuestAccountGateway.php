@@ -39,7 +39,6 @@ class GuestAccountGateway implements GuestAccountGatewayInterface
         AddressServiceInterface $addressService,
         EntityManagerInterface $em,
         FormFactoryInterface $formFactory,
-        $modules,
         ContextServiceInterface $contextService,
         RegisterServiceInterface $registerService
     )
@@ -47,7 +46,10 @@ class GuestAccountGateway implements GuestAccountGatewayInterface
         $this->addressService = $addressService;
         $this->em = $em;
         $this->formFactory = $formFactory;
-        $this->modules = $modules;
+
+        # attention, modules doesnt exist in CLI
+        $this->modules = Shopware()->Modules();
+
         $this->registerService = $registerService;
         $this->shop = $contextService->getShopContext()->getShop();
     }

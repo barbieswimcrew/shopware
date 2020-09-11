@@ -92,11 +92,19 @@ class MollieApiFactory
     {
         $client = new MollieApiClient();
 
+        $shopwareVersion = Shopware()->Config()->get('Version');
+
+        # this parameter has been deprecated
+        # we need a new version access for shopware 5.5 and up.
+        # deprecated to be removed in 5.6
+        if ($shopwareVersion === '___VERSION___') {
+            /** @var \Shopware\Components\ShopwareReleaseStruct $release */
+            $release = Shopware()->Container()->get('shopware.release');
+            $shopwareVersion = $release->getVersion();
+        }
+
         // add platform name and version
-        $client->addVersionString(
-            'Shopware/' .
-            Shopware()->Container()->getParameter('shopware.release.version')
-        );
+        $client->addVersionString('Shopware/' . $shopwareVersion);
 
         // add plugin name and version
         $client->addVersionString(

@@ -33,16 +33,14 @@ class Account
 
 
     /**
-     * Account constructor.
-     *
-     * @param $modules
      * @param \Enlight_Components_Session_Namespace $session
      * @param Manager $pwdEncoder
      * @param GuestAccountGatewayInterface $gwGuestCustomer
      */
-    public function __construct($modules, \Enlight_Components_Session_Namespace $session, Manager $pwdEncoder, GuestAccountGatewayInterface $gwGuestCustomer)
+    public function __construct(\Enlight_Components_Session_Namespace $session, Manager $pwdEncoder, GuestAccountGatewayInterface $gwGuestCustomer)
     {
-        $this->admin = $modules->sAdmin();
+        # attention, modules doesnt exist in CLI
+        $this->admin = Shopware()->Modules()->sAdmin();
 
         $this->session = $session;
         $this->pwdEncoder = $pwdEncoder;
