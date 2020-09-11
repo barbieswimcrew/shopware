@@ -13,7 +13,7 @@ class BasketSnapshot
     /**
      *
      */
-    const SESSION_KEY = 'mollie-basket-snapshot';
+    const SESSION_KEY = 'mollieBasketSnapshot';
 
 
     /**
