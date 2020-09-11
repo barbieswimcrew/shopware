@@ -32,6 +32,11 @@
     .applepay-button {
         width: 100%;
 
+        @media screen and (min-width: @phoneLandscapeViewportWidth) {
+          width: 49%;
+          margin-left: 51%;
+        }
+
         @media screen and (min-width: @tabletViewportWidth) {
             width: 25%;
             margin-left: 75%;
